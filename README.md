@@ -21,7 +21,7 @@ Xournal++, Rnote, Blender, OpenBoard, MyPaint, Pinta…
 **Connection**
 - **Plug in and draw (Android, USB).** When the cable goes in, Inkslate forwards the ports over adb,
   wakes the tablet, opens the page in Chrome and switches it to fullscreen as soon as the tablet is
-  unlocked. No URLs to type, no leftover duplicate tabs, the Weylus menu starts closed.
+  unlocked. No URLs to type, no leftover duplicate tabs, the tablet menu starts closed.
 - **Wi-Fi for everything else** (iPad, other browsers): scan the QR code in the window; it carries
   the access code, so there is nothing to type.
 - Runs in the **background** (optional autostart) and restarts Weylus if it crashes.
@@ -45,7 +45,7 @@ Xournal++, Rnote, Blender, OpenBoard, MyPaint, Pinta…
   highlight colour (follows your desktop's accent colour by default), labels, and it fades while
   you draw. It can also hide at the edge as a thin strip and slide out when the pen hovers over it.
   Up to 10 buttons. The window shows a live preview at the tablet's real proportions.
-- **A tidier settings menu on the tablet.** Weylus' own menu becomes a drawer on the screen edge
+- **A tidier settings menu on the tablet.** Weylus' menu becomes Inkslate's drawer on the screen edge
   with compact switches and sliders in the toolbar's colours, shorter labels and the input settings
   first. It no longer closes when the pen merely hovers over the screen, and Weylus' error pop-ups
   no longer freeze the page.
@@ -62,7 +62,7 @@ Xournal++, Rnote, Blender, OpenBoard, MyPaint, Pinta…
 - **Tablet background colour** for the energy-saving screen, light or dark theme for the window.
 
 **Control from the PC**
-- Every setting of the Weylus menu on the tablet (pen, touch, energy saving, video, frame rate,
+- Every setting of the menu on the tablet (pen, touch, energy saving, video, frame rate,
   resolution, captured screen…) is mirrored in the window and applies live.
 - Energy saving keeps the screen black even after fullscreen or rotation, keeps the tablet awake
   and can dim its backlight (USB).
@@ -149,7 +149,7 @@ inkslate --set tablet.eraser=true            # any key of ~/.config/inkslate/con
 inkslate --set tablet.curve.in_max=0.6
 inkslate --set profile=krita
 inkslate --set tablet.toolbar.side=bottom
-inkslate --native energysaving=true          # a setting of the Weylus menu on the tablet
+inkslate --native energysaving=true          # a setting of the menu on the tablet
 inkslate --action undo                       # undo, redo, eraser, reload, open-page, fullscreen
 inkslate --status                            # JSON: Weylus, tablet, battery, connected pages
 inkslate --background                        # start without the window
@@ -161,6 +161,14 @@ To use a specific Weylus, set `weylus_path` in `~/.config/inkslate/config.json` 
 
 ## Notes and limitations
 
+- **Linux only on the PC.** Weylus also runs on Windows and macOS, but Inkslate's desktop side (GTK
+  window, process handling, autostart, installer) is written for Linux and has only been tested
+  there. The eraser tip also relies on Weylus' Linux input devices.
+- **Tablets**: any tablet or phone with a current browser (Chrome, Samsung Internet, Firefox,
+  Safari) works over Wi-Fi. Plug-and-draw over USB needs Android (adb). Pressure needs a pen that
+  the browser reports as a pen with pressure: S Pen, Wacom EMR and Apple Pencil do, many cheap
+  capacitive pens don't. iPad Safari has no fullscreen mode for web pages. Only Android tablets
+  have been tested so far.
 - **Pen buttons**: mobile browsers don't report the S Pen (or Apple Pencil) buttons to web pages, so
   they can't be mapped. Use the toolbar. If you need them, a native app such as UScreen can (see
   below).

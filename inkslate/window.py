@@ -1,4 +1,4 @@
-"""Main window: status, the tablet page's Weylus settings, pen, screen area, toolbar and connection."""
+"""Main window: status, the tablet page's settings, pen, screen area, toolbar and connection."""
 
 import gi
 
@@ -193,7 +193,7 @@ class MainWindow(Adw.ApplicationWindow):
         page = Adw.PreferencesPage()
         self.native_rows = {}
         self.tablet_banner = Adw.Banner(title=("The tablet page is not connected. These are the "
-                                                "settings of the Weylus menu on the tablet."))
+                                                "settings of the menu on the tablet."))
         self.tablet_banner.set_revealed(True)
         bgroup = Adw.PreferencesGroup()
         bgroup.add(self.tablet_banner)
@@ -206,7 +206,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._native_switch(g, "enable_mouse", "Mouse")
         self._native_switch(g, "uinput_support", "uinput",
                             "Needed for pen pressure and multi-touch")
-        self._native_switch(g, "lefty", "Left-handed", "Puts the Weylus menu on the left")
+        self._native_switch(g, "lefty", "Left-handed", "Puts the tablet menu on the left")
         self.scale_min_pressure = _scale(0, 1, 0.01, 2)
         self.scale_min_pressure.connect(
             "value-changed", lambda s: self._native_changed("min_pressure", round(s.get_value(), 2)))
@@ -718,7 +718,7 @@ class MainWindow(Adw.ApplicationWindow):
                                        subtitle="For Wi-Fi, where automatic fullscreen isn't possible")
         self.sw_tap_fs.connect("notify::active", lambda r, _p: self._set_tablet("fullscreen_on_tap", r.get_active()))
         g.add(self.sw_tap_fs)
-        self.sw_hide_menu = Adw.SwitchRow(title="Start with the Weylus menu closed",
+        self.sw_hide_menu = Adw.SwitchRow(title="Start with the tablet menu closed",
                                           subtitle="It can still be opened with the ⠿ handle on the tablet")
         self.sw_hide_menu.connect("notify::active", lambda r, _p: self._set_tablet("hide_menu", r.get_active()))
         g.add(self.sw_hide_menu)

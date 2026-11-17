@@ -544,10 +544,12 @@
                 return;
             }
             case "fullscreen":
-                if (!document.fullscreenElement)
-                    document.body.requestFullscreen({ navigationUI: "hide" }).catch(() => { });
-                else
+                if (document.fullscreenElement)
                     document.exitFullscreen();
+                else if (document.body.requestFullscreen)
+                    document.body.requestFullscreen({ navigationUI: "hide" }).catch(() => { });
+                else    // iPad Safari has no fullscreen for pages
+                    toast("This browser has no fullscreen mode", 3000);
                 return;
             case "right_click":
                 setPenMode(state.penMode === "right" ? null : "right", true);
@@ -642,7 +644,7 @@
   min-height: 40px; margin: 0; padding: 4px 0; box-sizing: border-box; border: none; }
 #settings.ink-menu .hide { display: none !important; }
 #settings.ink-menu br { display: none; }
-#settings.ink-menu label:has(> input[type=checkbox]) { flex-direction: row-reverse; }
+#settings.ink-menu label.ink-check { flex-direction: row-reverse; }
 #settings.ink-menu label > span, #settings.ink-menu .ink-text { flex: 1 1 auto; }
 #settings.ink-menu label input:disabled + span { color: var(--ink-dim); }
 #settings.ink-menu input[type=checkbox] { -webkit-appearance: none; appearance: none; flex: none; position: relative;
@@ -653,9 +655,9 @@
 #settings.ink-menu input[type=checkbox]:checked { background: var(--ink-accent); border-color: var(--ink-accent); }
 #settings.ink-menu input[type=checkbox]:checked::before { transform: translateX(16px); background: #fff; }
 #settings.ink-menu input[type=checkbox]:disabled { opacity: 0.35; }
-#settings.ink-menu label:has(input[type=range]) { flex-wrap: wrap; row-gap: 0; padding-top: 8px; }
-#settings.ink-menu label:has(input[type=range]) .ink-text { flex: 1 1 0; min-width: 0; }
-#settings.ink-menu label:has(input[type=range]) output { order: 1; margin-left: auto; color: var(--ink-dim);
+#settings.ink-menu label.ink-range { flex-wrap: wrap; row-gap: 0; padding-top: 8px; }
+#settings.ink-menu label.ink-range .ink-text { flex: 1 1 0; min-width: 0; }
+#settings.ink-menu label.ink-range output { order: 1; margin-left: auto; color: var(--ink-dim);
   font: 12px var(--ink-mono); }
 #settings.ink-menu .ink-unit { order: 2; flex: none; margin-left: -9px; color: var(--ink-dim); font: 12px var(--ink-mono); }
 #settings.ink-menu input[type=range] { order: 3; flex: 1 1 100%; width: 100%; height: 28px; margin: 0;
@@ -681,8 +683,8 @@
 #settings.ink-menu button:active, #settings.ink-menu #displayoptions label:active { background: var(--ink-field);
   border-color: var(--ink-accent); }
 #settings.ink-menu label[for=window] { min-height: 0; padding: 10px 0 0; font-size: 12px; color: var(--ink-dim); }
-#settings.ink-menu label:has(input[type=text]) { flex-direction: column; align-items: stretch; gap: 0; }
-#settings.ink-menu label:has(input[type=text]) > span:last-child { font-size: 12px; color: var(--ink-dim); }
+#settings.ink-menu label.ink-textfield { flex-direction: column; align-items: stretch; gap: 0; }
+#settings.ink-menu label.ink-textfield > span:last-child { font-size: 12px; color: var(--ink-dim); }
 #settings.ink-menu #displayoptions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px;
   border-top: 1px solid var(--ink-line); }
 #settings.ink-menu #displayoptions label { flex: 1; justify-content: center; min-height: 36px; padding: 6px 8px;
@@ -1029,7 +1031,7 @@
     }
 
     function relabelMenu() {
-        setText(document.querySelector("#settings h2"), "Weylus settings");
+        setText(document.querySelector("#settings h2"), "Inkslate");
         for (const [id, text] of Object.entries(LABELS)) {
             const el = document.getElementById(id);
             if (!el)
@@ -1067,8 +1069,14 @@
                 const handle = document.getElementById("handle");
                 if (handle)
                     handle.innerHTML = SVG_OPEN + MENU_ICON + "</svg>";
-                for (const label of menu.querySelectorAll("label"))
+                for (const label of menu.querySelectorAll("label")) {
                     wrapLabelText(label);
+                    // classes instead of :has(), which older tablet browsers don't know
+                    const kinds = Array.from(label.children).map((c) => c.tagName === "INPUT" ? c.type : "");
+                    label.classList.toggle("ink-check", kinds.includes("checkbox"));
+                    label.classList.toggle("ink-range", kinds.includes("range"));
+                    label.classList.toggle("ink-textfield", kinds.includes("text"));
+                }
                 reorderMenu();
                 relabelMenu();
                 for (const r of menu.querySelectorAll("input[type=range]")) {
