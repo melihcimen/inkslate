@@ -1,0 +1,474 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: inkslate\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Start without opening the window"
+msgstr "Pencereyi açmadan başlat"
+
+msgid "Stop the running instance"
+msgstr "Çalışan örneği durdur"
+
+msgid "Print the version"
+msgstr "Sürümü yazdır"
+
+msgid "Change a setting of the running instance, e.g. tablet.eraser=true"
+msgstr "Çalışan örneğin bir ayarını değiştir, örn. tablet.eraser=true"
+
+msgid "Change a Weylus setting on the tablet page, e.g. energysaving=true"
+msgstr "Tablet sayfasındaki bir Weylus ayarını değiştir, örn. energysaving=true"
+
+msgid "Run a tablet action: open-page, fullscreen, reload, undo, redo, eraser"
+msgstr "Tablette bir eylem çalıştır: open-page, fullscreen, reload, undo, redo, eraser"
+
+msgid "Control port {port} is busy: {err}"
+msgstr "Kontrol portu {port} kullanımda: {err}"
+
+msgid "Inkslate is still running"
+msgstr "Inkslate çalışmaya devam ediyor"
+
+msgid "The tablet keeps working. Use “Quit” in the menu to stop it."
+msgstr "Tablet çalışmaya devam ediyor. Durdurmak için menüdeki “Çık”ı kullan."
+
+msgid "Tablet pen input in the background"
+msgstr "Arka planda tablet kalem girdisi"
+
+msgid "Weylus keeps stopping"
+msgstr "Weylus sürekli duruyor"
+
+msgid "Another Weylus may be using the same ports. See the log in Inkslate."
+msgstr "Aynı portları başka bir Weylus kullanıyor olabilir. Inkslate'teki günlüğe bak."
+
+msgid "Tablet connected"
+msgstr "Tablet bağlandı"
+
+msgid "Opening the page on the tablet."
+msgstr "Sayfa tablette açılıyor."
+
+msgid "Could not switch to fullscreen: {reason}"
+msgstr "Tam ekrana geçilemedi: {reason}"
+
+msgid "Inkslate contributors"
+msgstr "Inkslate katkıcıları"
+
+msgid "Use an Android tablet as a graphics tablet on Linux. Built on Weylus by H-M-H."
+msgstr "Linux'ta Android tableti çizim tableti olarak kullan. H-M-H'nin Weylus'u üzerine kurulu."
+
+msgid "Built on"
+msgstr "Temel aldığı"
+
+msgid "Generic"
+msgstr "Genel"
+
+msgid "Undo"
+msgstr "Geri al"
+
+msgid "Redo"
+msgstr "Yinele"
+
+msgid "Eraser"
+msgstr "Silgi"
+
+msgid "Save"
+msgstr "Kaydet"
+
+msgid "Toggle finger input"
+msgstr "Parmak girdisini aç/kapa"
+
+msgid "Fullscreen"
+msgstr "Tam ekran"
+
+msgid "Nothing"
+msgstr "Hiçbiri"
+
+msgid "About Inkslate"
+msgstr "Inkslate Hakkında"
+
+msgid "Quit (stops Weylus)"
+msgstr "Çık (Weylus'u durdurur)"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "Status"
+msgstr "Durum"
+
+msgid "Tablet"
+msgstr "Tablet"
+
+msgid "Pen"
+msgstr "Kalem"
+
+msgid "Shortcuts"
+msgstr "Kısayollar"
+
+msgid "Connection"
+msgstr "Bağlantı"
+
+msgid "Tablet page"
+msgstr "Tablet sayfası"
+
+msgid "Open"
+msgstr "Aç"
+
+msgid "Open the page on the tablet"
+msgstr "Sayfayı tablette aç"
+
+msgid "Reload the tablet page"
+msgstr "Tablet sayfasını yenile"
+
+msgid "Tablet battery"
+msgstr "Tablet pili"
+
+msgid "Server"
+msgstr "Sunucu"
+
+msgid "Restart"
+msgstr "Yeniden başlat"
+
+msgid "Open the Weylus log"
+msgstr "Weylus günlüğünü aç"
+
+msgid "Address for the tablet"
+msgstr "Tablet için adres"
+
+msgid "Copy"
+msgstr "Kopyala"
+
+msgid "Quick settings"
+msgstr "Hızlı ayarlar"
+
+msgid "Energy saving"
+msgstr "Enerji tasarrufu"
+
+msgid "No video, black tablet screen; pen still works"
+msgstr "Görüntü yok, tablet ekranı siyah; kalem çalışmaya devam eder"
+
+msgid "Eraser mode"
+msgstr "Silgi modu"
+
+msgid "The tablet page is not connected. These are the settings of the Weylus menu on the tablet."
+msgstr "Tablet sayfası bağlı değil. Bunlar tabletteki Weylus menüsünün ayarlarıdır."
+
+msgid "Input"
+msgstr "Girdi"
+
+msgid "Finger input"
+msgstr "Parmak girdisi"
+
+msgid "Off: fingers only do gestures and can't draw by accident"
+msgstr "Kapalıyken parmaklar yalnızca hareket yapar, yanlışlıkla çizemez"
+
+msgid "Mouse"
+msgstr "Fare"
+
+msgid "uinput"
+msgstr "uinput"
+
+msgid "Needed for pen pressure and multi-touch"
+msgstr "Kalem basıncı ve çoklu dokunma için gerekli"
+
+msgid "Left-handed"
+msgstr "Solak"
+
+msgid "Puts the Weylus menu on the right"
+msgstr "Weylus menüsünü sağa alır"
+
+msgid "Minimum pressure"
+msgstr "En düşük basınç"
+
+msgid "Weylus' own floor, applied before the curve"
+msgstr "Weylus'un kendi alt sınırı, eğriden önce uygulanır"
+
+msgid "Screen"
+msgstr "Ekran"
+
+msgid "No video, black screen (saves the tablet's battery)"
+msgstr "Görüntü yok, siyah ekran (tabletin pilini korur)"
+
+msgid "Video"
+msgstr "Görüntü"
+
+msgid "Fill the screen"
+msgstr "Ekranı doldur"
+
+msgid "Show the cursor in the video"
+msgstr "İmleci görüntüde göster"
+
+msgid "Low latency"
+msgstr "Düşük gecikme"
+
+msgid "Skip ahead instead of buffering the video"
+msgstr "Görüntüyü arabelleğe almak yerine ileri atla"
+
+msgid "Frame interval (ms)"
+msgstr "Kareler arası süre (ms)"
+
+msgid "16 ms ≈ 60 FPS, 33 ms ≈ 30 FPS"
+msgstr "16 ms ≈ 60 FPS, 33 ms ≈ 30 FPS"
+
+msgid "Maximum video resolution"
+msgstr "En yüksek görüntü çözünürlüğü"
+
+msgid "Captured screen"
+msgstr "Yakalanan ekran"
+
+msgid "Refresh the list"
+msgstr "Listeyi yenile"
+
+msgid "Pressure curve"
+msgstr "Basınç eğrisi"
+
+msgid "Draw on the tablet to see the pressure live. The vertical line marks your hardest press."
+msgstr "Basıncı canlı görmek için tablette çiz. Dikey çizgi en sert baskını gösterir."
+
+msgid "pen pressure"
+msgstr "kalem basıncı"
+
+msgid "sent to apps"
+msgstr "uygulamalara giden"
+
+msgid "Waiting for the pen…"
+msgstr "Kalem bekleniyor…"
+
+msgid "Full pressure at"
+msgstr "Tam basınç noktası"
+
+msgid "Lower = less force for a thick line"
+msgstr "Düşük = kalın çizgi için daha az kuvvet"
+
+msgid "Threshold"
+msgstr "Eşik"
+
+msgid "Pressure below this counts as zero"
+msgstr "Bunun altındaki basınç sıfır sayılır"
+
+msgid "Curve"
+msgstr "Eğri"
+
+msgid "Below 1: soft (light strokes get thicker), above 1: firm"
+msgstr "1'in altı: yumuşak (hafif çizgiler kalınlaşır), 1'in üstü: sert"
+
+msgid "Reset curve"
+msgstr "Eğriyi sıfırla"
+
+msgid "The pen acts as an eraser tip (also on the tablet toolbar)"
+msgstr "Kalem silgi ucu gibi davranır (tablet çubuğunda da var)"
+
+msgid "Smoothing"
+msgstr "Yumuşatma"
+
+msgid "Steadies shaky lines, adds a little lag"
+msgstr "Titrek çizgileri düzeltir, biraz gecikme ekler"
+
+msgid "Pen: {raw:.2f} → sent: {out:.2f}"
+msgstr "Kalem: {raw:.2f} → giden: {out:.2f}"
+
+msgid "eraser"
+msgstr "silgi"
+
+msgid "Tablet toolbar"
+msgstr "Tablet kısayol çubuğu"
+
+msgid "Buttons on the edge of the tablet screen. Tap the eraser to toggle it, hold it to erase only while holding."
+msgstr "Tablet ekranının kenarındaki düğmeler. Silgiye dokununca açılıp kapanır, basılı tutunca yalnızca tuttuğun sürece siler."
+
+msgid "Show the toolbar"
+msgstr "Çubuğu göster"
+
+msgid "Side"
+msgstr "Konum"
+
+msgid "Left"
+msgstr "Sol"
+
+msgid "Right"
+msgstr "Sağ"
+
+msgid "App profile"
+msgstr "Uygulama profili"
+
+msgid "Which key combos undo, redo and save send"
+msgstr "Geri al, yinele ve kaydet hangi tuş kombinasyonlarını göndersin"
+
+msgid "Button {n}"
+msgstr "Düğme {n}"
+
+msgid "Finger gestures"
+msgstr "Parmak hareketleri"
+
+msgid "Work while finger input is off, so your hand can't draw."
+msgstr "Parmak girdisi kapalıyken çalışır, böylece elin çizim yapamaz."
+
+msgid "Gestures"
+msgstr "Hareketler"
+
+msgid "Two-finger tap"
+msgstr "İki parmakla dokunma"
+
+msgid "Three-finger tap"
+msgstr "Üç parmakla dokunma"
+
+msgid "Palm rejection"
+msgstr "Avuç içi reddi"
+
+msgid "Ignore touches near the pen"
+msgstr "Kaleme yakın dokunmaları yok say"
+
+msgid "When finger input is on, a palm resting while the pen is close won't draw or click"
+msgstr "Parmak girdisi açıkken, kalem yakındayken ekrana değen avuç içi çizmez ve tıklamaz"
+
+msgid "Pen grace period (ms)"
+msgstr "Kalemden sonraki bekleme süresi (ms)"
+
+msgid "Mode"
+msgstr "Mod"
+
+msgid "USB"
+msgstr "USB"
+
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+msgid "USB (recommended) needs USB debugging on the tablet; Wi-Fi needs the access code"
+msgstr "USB (önerilen) tablette USB hata ayıklama ister; Wi-Fi erişim kodu ister"
+
+msgid "Access code (Wi-Fi)"
+msgstr "Erişim kodu (Wi-Fi)"
+
+msgid "Open the page when the tablet is plugged in"
+msgstr "Tablet takılınca sayfayı aç"
+
+msgid "Switch the page to fullscreen"
+msgstr "Sayfayı tam ekrana al"
+
+msgid "Through Chrome's USB debugging connection"
+msgstr "Chrome'un USB hata ayıklama bağlantısı üzerinden"
+
+msgid "Dim the tablet in energy saving"
+msgstr "Enerji tasarrufunda tablet parlaklığını kıs"
+
+msgid "Restored when energy saving is turned off or the page closes. If you unplug the cable first, it is restored the next time you plug it in."
+msgstr "Enerji tasarrufu kapanınca ya da sayfa kapanınca eski haline döner. Kabloyu önce çıkarırsan bir sonraki takışta geri gelir."
+
+msgid "Keep the tablet screen on"
+msgstr "Tablet ekranı kapanmasın"
+
+msgid "While the page is open"
+msgstr "Sayfa açıkken"
+
+msgid "Fullscreen on first tap"
+msgstr "İlk dokunuşta tam ekran"
+
+msgid "For Wi-Fi, where automatic fullscreen isn't possible"
+msgstr "Otomatik tam ekranın mümkün olmadığı Wi-Fi için"
+
+msgid "Only matters if you want to see the PC screen on the tablet. Changing these restarts Weylus."
+msgstr "Yalnızca bilgisayar ekranını tablette görmek istiyorsan önemlidir. Değiştirmek Weylus'u yeniden başlatır."
+
+msgid "Wayland screen capture (PipeWire)"
+msgstr "Wayland ekran yakalama (PipeWire)"
+
+msgid "Without it the video is black on Wayland; it asks for screen-sharing permission"
+msgstr "Kapalıyken Wayland'da görüntü siyah olur; açıkken ekran paylaşma izni ister"
+
+msgid "Hardware encoding (VA-API)"
+msgstr "Donanım kodlama (VA-API)"
+
+msgid "Keep the maximum video resolution at the right end"
+msgstr "En yüksek görüntü çözünürlüğünü en sağda tut"
+
+msgid "NVIDIA encoding (NVENC)"
+msgstr "NVIDIA kodlama (NVENC)"
+
+msgid "Wakes the discrete GPU and costs battery"
+msgstr "Harici ekran kartını uyandırır, pil tüketir"
+
+msgid "System"
+msgstr "Sistem"
+
+msgid "Start at login"
+msgstr "Oturum açılınca başlat"
+
+msgid "Runs in the background without opening this window"
+msgstr "Bu pencereyi açmadan arka planda çalışır"
+
+msgid "Language"
+msgstr "Dil"
+
+msgid "System default"
+msgstr "Sistem dili"
+
+msgid "Applies after restarting Inkslate"
+msgstr "Inkslate yeniden başlatılınca uygulanır"
+
+msgid "Weylus program"
+msgstr "Weylus programı"
+
+msgid "Restart Inkslate to change the language"
+msgstr "Dili değiştirmek için Inkslate'i yeniden başlat"
+
+msgid "Weylus restarted"
+msgstr "Weylus yeniden başlatıldı"
+
+msgid "adb is not installed (sudo apt install adb)"
+msgstr "adb kurulu değil (sudo apt install adb)"
+
+msgid "{model} · USB"
+msgstr "{model} · USB"
+
+msgid "Allow USB debugging on the tablet"
+msgstr "Tablette USB hata ayıklama iznini onayla"
+
+msgid "Tablet is not responding (replug the cable)"
+msgstr "Tablet yanıt vermiyor (kabloyu çıkarıp tak)"
+
+msgid "Connected over Wi-Fi ({ip})"
+msgstr "Wi-Fi üzerinden bağlı ({ip})"
+
+msgid "Not connected · plug in the cable"
+msgstr "Bağlı değil · kabloyu tak"
+
+msgid "Connected"
+msgstr "Bağlı"
+
+msgid "fullscreen"
+msgstr "tam ekran"
+
+msgid "in the background"
+msgstr "arka planda"
+
+msgid "Not open"
+msgstr "Açık değil"
+
+msgid "charging"
+msgstr "şarj oluyor"
+
+msgid "Running"
+msgstr "Çalışıyor"
+
+msgid "Weylus not found. Install it or set its path in config.json"
+msgstr "Weylus bulunamadı. Kur ya da yolunu config.json'da belirt"
+
+msgid "Keeps stopping; see the log (is another Weylus using the ports?)"
+msgstr "Sürekli duruyor; günlüğe bak (portları başka bir Weylus mu kullanıyor?)"
+
+msgid "Restarting…"
+msgstr "Yeniden başlatılıyor…"
+
+msgid "Stopped"
+msgstr "Durdu"
+
+msgid "not found"
+msgstr "bulunamadı"
+
+msgid "At most {w}×{h}"
+msgstr "En fazla {w}×{h}"
+
+msgid "Copied"
+msgstr "Kopyalandı"
+

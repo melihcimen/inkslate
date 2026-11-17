@@ -1,0 +1,663 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the inkslate package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: inkslate\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-17 11:26+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: inkslate/app.py:31
+msgid "Start without opening the window"
+msgstr ""
+
+#: inkslate/app.py:33
+msgid "Stop the running instance"
+msgstr ""
+
+#: inkslate/app.py:35
+msgid "Print the version"
+msgstr ""
+
+#: inkslate/app.py:37
+msgid "Change a setting of the running instance, e.g. tablet.eraser=true"
+msgstr ""
+
+#: inkslate/app.py:40
+msgid "Change a Weylus setting on the tablet page, e.g. energysaving=true"
+msgstr ""
+
+#: inkslate/app.py:43
+msgid "Run a tablet action: open-page, fullscreen, reload, undo, redo, eraser"
+msgstr ""
+
+#: inkslate/app.py:81
+#, python-brace-format
+msgid "Control port {port} is busy: {err}"
+msgstr ""
+
+#: inkslate/app.py:164
+msgid "Inkslate is still running"
+msgstr ""
+
+#: inkslate/app.py:165
+msgid "The tablet keeps working. Use “Quit” in the menu to stop it."
+msgstr ""
+
+#: inkslate/app.py:257
+msgid "Tablet pen input in the background"
+msgstr ""
+
+#: inkslate/app.py:276
+msgid "Weylus keeps stopping"
+msgstr ""
+
+#: inkslate/app.py:277
+msgid "Another Weylus may be using the same ports. See the log in Inkslate."
+msgstr ""
+
+#: inkslate/app.py:330
+msgid "Tablet connected"
+msgstr ""
+
+#: inkslate/app.py:331
+msgid "Opening the page on the tablet."
+msgstr ""
+
+#: inkslate/app.py:334
+#, python-brace-format
+msgid "Could not switch to fullscreen: {reason}"
+msgstr ""
+
+#: inkslate/app.py:342
+msgid "Inkslate contributors"
+msgstr ""
+
+#: inkslate/app.py:346
+msgid ""
+"Use an Android tablet as a graphics tablet on Linux. Built on Weylus by H-M-"
+"H."
+msgstr ""
+
+#: inkslate/app.py:348
+msgid "Built on"
+msgstr ""
+
+#: inkslate/profiles.py:43
+msgid "Generic"
+msgstr ""
+
+#: inkslate/profiles.py:48
+msgid "Undo"
+msgstr ""
+
+#: inkslate/profiles.py:49
+msgid "Redo"
+msgstr ""
+
+#: inkslate/profiles.py:50
+msgid "Eraser"
+msgstr ""
+
+#: inkslate/profiles.py:51
+msgid "Save"
+msgstr ""
+
+#: inkslate/profiles.py:52
+msgid "Toggle finger input"
+msgstr ""
+
+#: inkslate/profiles.py:53 inkslate/window.py:106
+msgid "Fullscreen"
+msgstr ""
+
+#: inkslate/profiles.py:54
+msgid "Nothing"
+msgstr ""
+
+#: inkslate/window.py:62
+msgid "About Inkslate"
+msgstr ""
+
+#: inkslate/window.py:63
+msgid "Quit (stops Weylus)"
+msgstr ""
+
+#: inkslate/window.py:65
+msgid "Menu"
+msgstr ""
+
+#: inkslate/window.py:71
+msgid "Status"
+msgstr ""
+
+#: inkslate/window.py:73 inkslate/window.py:99
+msgid "Tablet"
+msgstr ""
+
+#: inkslate/window.py:75 inkslate/window.py:168 inkslate/window.py:266
+msgid "Pen"
+msgstr ""
+
+#: inkslate/window.py:77
+msgid "Shortcuts"
+msgstr ""
+
+#: inkslate/window.py:79 inkslate/window.py:100 inkslate/window.py:410
+msgid "Connection"
+msgstr ""
+
+#: inkslate/window.py:104
+msgid "Tablet page"
+msgstr ""
+
+#: inkslate/window.py:105
+msgid "Open"
+msgstr ""
+
+#: inkslate/window.py:105
+msgid "Open the page on the tablet"
+msgstr ""
+
+#: inkslate/window.py:108
+msgid "Reload the tablet page"
+msgstr ""
+
+#: inkslate/window.py:114
+msgid "Tablet battery"
+msgstr ""
+
+#: inkslate/window.py:118
+msgid "Server"
+msgstr ""
+
+#: inkslate/window.py:120
+msgid "Restart"
+msgstr ""
+
+#: inkslate/window.py:122
+msgid "Open the Weylus log"
+msgstr ""
+
+#: inkslate/window.py:127
+msgid "Address for the tablet"
+msgstr ""
+
+#: inkslate/window.py:130
+msgid "Copy"
+msgstr ""
+
+#: inkslate/window.py:136
+msgid "Quick settings"
+msgstr ""
+
+#: inkslate/window.py:137 inkslate/window.py:185
+msgid "Energy saving"
+msgstr ""
+
+#: inkslate/window.py:138
+msgid "No video, black tablet screen; pen still works"
+msgstr ""
+
+#: inkslate/window.py:142 inkslate/window.py:267
+msgid "Eraser mode"
+msgstr ""
+
+#: inkslate/window.py:160
+msgid ""
+"The tablet page is not connected. These are the settings of the Weylus menu "
+"on the tablet."
+msgstr ""
+
+#: inkslate/window.py:167
+msgid "Input"
+msgstr ""
+
+#: inkslate/window.py:169
+msgid "Finger input"
+msgstr ""
+
+#: inkslate/window.py:170
+msgid "Off: fingers only do gestures and can't draw by accident"
+msgstr ""
+
+#: inkslate/window.py:171
+msgid "Mouse"
+msgstr ""
+
+#: inkslate/window.py:172
+msgid "uinput"
+msgstr ""
+
+#: inkslate/window.py:173
+msgid "Needed for pen pressure and multi-touch"
+msgstr ""
+
+#: inkslate/window.py:174
+msgid "Left-handed"
+msgstr ""
+
+#: inkslate/window.py:174
+msgid "Puts the Weylus menu on the right"
+msgstr ""
+
+#: inkslate/window.py:178
+msgid "Minimum pressure"
+msgstr ""
+
+#: inkslate/window.py:179
+msgid "Weylus' own floor, applied before the curve"
+msgstr ""
+
+#: inkslate/window.py:184
+msgid "Screen"
+msgstr ""
+
+#: inkslate/window.py:186
+msgid "No video, black screen (saves the tablet's battery)"
+msgstr ""
+
+#: inkslate/window.py:187 inkslate/window.py:446
+msgid "Video"
+msgstr ""
+
+#: inkslate/window.py:188
+msgid "Fill the screen"
+msgstr ""
+
+#: inkslate/window.py:189
+msgid "Show the cursor in the video"
+msgstr ""
+
+#: inkslate/window.py:190
+msgid "Low latency"
+msgstr ""
+
+#: inkslate/window.py:191
+msgid "Skip ahead instead of buffering the video"
+msgstr ""
+
+#: inkslate/window.py:194
+msgid "Frame interval (ms)"
+msgstr ""
+
+#: inkslate/window.py:195
+msgid "16 ms ≈ 60 FPS, 33 ms ≈ 30 FPS"
+msgstr ""
+
+#: inkslate/window.py:203
+msgid "Maximum video resolution"
+msgstr ""
+
+#: inkslate/window.py:207
+msgid "Captured screen"
+msgstr ""
+
+#: inkslate/window.py:210
+msgid "Refresh the list"
+msgstr ""
+
+#: inkslate/window.py:233
+msgid "Pressure curve"
+msgstr ""
+
+#: inkslate/window.py:234
+msgid ""
+"Draw on the tablet to see the pressure live. The vertical line marks your "
+"hardest press."
+msgstr ""
+
+#: inkslate/window.py:237
+msgid "pen pressure"
+msgstr ""
+
+#: inkslate/window.py:237
+msgid "sent to apps"
+msgstr ""
+
+#: inkslate/window.py:244
+msgid "Waiting for the pen…"
+msgstr ""
+
+#: inkslate/window.py:251
+msgid "Full pressure at"
+msgstr ""
+
+#: inkslate/window.py:251
+msgid "Lower = less force for a thick line"
+msgstr ""
+
+#: inkslate/window.py:255
+msgid "Threshold"
+msgstr ""
+
+#: inkslate/window.py:255
+msgid "Pressure below this counts as zero"
+msgstr ""
+
+#: inkslate/window.py:259
+msgid "Curve"
+msgstr ""
+
+#: inkslate/window.py:259
+msgid "Below 1: soft (light strokes get thicker), above 1: firm"
+msgstr ""
+
+#: inkslate/window.py:261
+msgid "Reset curve"
+msgstr ""
+
+#: inkslate/window.py:268
+msgid "The pen acts as an eraser tip (also on the tablet toolbar)"
+msgstr ""
+
+#: inkslate/window.py:274
+msgid "Smoothing"
+msgstr ""
+
+#: inkslate/window.py:274
+msgid "Steadies shaky lines, adds a little lag"
+msgstr ""
+
+#: inkslate/window.py:297
+#, python-brace-format
+msgid "Pen: {raw:.2f} → sent: {out:.2f}"
+msgstr ""
+
+#: inkslate/window.py:298
+msgid "eraser"
+msgstr ""
+
+#: inkslate/window.py:315
+msgid "Tablet toolbar"
+msgstr ""
+
+#: inkslate/window.py:316
+msgid ""
+"Buttons on the edge of the tablet screen. Tap the eraser to toggle it, hold "
+"it to erase only while holding."
+msgstr ""
+
+#: inkslate/window.py:318
+msgid "Show the toolbar"
+msgstr ""
+
+#: inkslate/window.py:321
+msgid "Side"
+msgstr ""
+
+#: inkslate/window.py:321
+msgid "Left"
+msgstr ""
+
+#: inkslate/window.py:321
+msgid "Right"
+msgstr ""
+
+#: inkslate/window.py:326
+msgid "App profile"
+msgstr ""
+
+#: inkslate/window.py:327
+msgid "Which key combos undo, redo and save send"
+msgstr ""
+
+#: inkslate/window.py:333
+#, python-brace-format
+msgid "Button {n}"
+msgstr ""
+
+#: inkslate/window.py:339
+msgid "Finger gestures"
+msgstr ""
+
+#: inkslate/window.py:340
+msgid "Work while finger input is off, so your hand can't draw."
+msgstr ""
+
+#: inkslate/window.py:341
+msgid "Gestures"
+msgstr ""
+
+#: inkslate/window.py:345
+msgid "Two-finger tap"
+msgstr ""
+
+#: inkslate/window.py:348
+msgid "Three-finger tap"
+msgstr ""
+
+#: inkslate/window.py:354
+msgid "Palm rejection"
+msgstr ""
+
+#: inkslate/window.py:355
+msgid "Ignore touches near the pen"
+msgstr ""
+
+#: inkslate/window.py:356
+msgid ""
+"When finger input is on, a palm resting while the pen is close won't draw or "
+"click"
+msgstr ""
+
+#: inkslate/window.py:361
+msgid "Pen grace period (ms)"
+msgstr ""
+
+#: inkslate/window.py:412
+msgid "Mode"
+msgstr ""
+
+#: inkslate/window.py:412 inkslate/window.py:422
+msgid "USB"
+msgstr ""
+
+#: inkslate/window.py:412
+msgid "Wi-Fi"
+msgstr ""
+
+#: inkslate/window.py:413
+msgid ""
+"USB (recommended) needs USB debugging on the tablet; Wi-Fi needs the access "
+"code"
+msgstr ""
+
+#: inkslate/window.py:417
+msgid "Access code (Wi-Fi)"
+msgstr ""
+
+#: inkslate/window.py:423
+msgid "Open the page when the tablet is plugged in"
+msgstr ""
+
+#: inkslate/window.py:426
+msgid "Switch the page to fullscreen"
+msgstr ""
+
+#: inkslate/window.py:427
+msgid "Through Chrome's USB debugging connection"
+msgstr ""
+
+#: inkslate/window.py:431
+msgid "Dim the tablet in energy saving"
+msgstr ""
+
+#: inkslate/window.py:432
+msgid ""
+"Restored when energy saving is turned off or the page closes. If you unplug "
+"the cable first, it is restored the next time you plug it in."
+msgstr ""
+
+#: inkslate/window.py:436
+msgid "Keep the tablet screen on"
+msgstr ""
+
+#: inkslate/window.py:437
+msgid "While the page is open"
+msgstr ""
+
+#: inkslate/window.py:440
+msgid "Fullscreen on first tap"
+msgstr ""
+
+#: inkslate/window.py:441
+msgid "For Wi-Fi, where automatic fullscreen isn't possible"
+msgstr ""
+
+#: inkslate/window.py:447
+msgid ""
+"Only matters if you want to see the PC screen on the tablet. Changing these "
+"restarts Weylus."
+msgstr ""
+
+#: inkslate/window.py:449
+msgid "Wayland screen capture (PipeWire)"
+msgstr ""
+
+#: inkslate/window.py:450
+msgid ""
+"Without it the video is black on Wayland; it asks for screen-sharing "
+"permission"
+msgstr ""
+
+#: inkslate/window.py:454
+msgid "Hardware encoding (VA-API)"
+msgstr ""
+
+#: inkslate/window.py:455
+msgid "Keep the maximum video resolution at the right end"
+msgstr ""
+
+#: inkslate/window.py:458
+msgid "NVIDIA encoding (NVENC)"
+msgstr ""
+
+#: inkslate/window.py:459
+msgid "Wakes the discrete GPU and costs battery"
+msgstr ""
+
+#: inkslate/window.py:464
+msgid "System"
+msgstr ""
+
+#: inkslate/window.py:465
+msgid "Start at login"
+msgstr ""
+
+#: inkslate/window.py:466
+msgid "Runs in the background without opening this window"
+msgstr ""
+
+#: inkslate/window.py:471
+msgid "Language"
+msgstr ""
+
+#: inkslate/window.py:471
+msgid "System default"
+msgstr ""
+
+#: inkslate/window.py:472
+msgid "Applies after restarting Inkslate"
+msgstr ""
+
+#: inkslate/window.py:475
+msgid "Weylus program"
+msgstr ""
+
+#: inkslate/window.py:485
+msgid "Restart Inkslate to change the language"
+msgstr ""
+
+#: inkslate/window.py:497
+msgid "Weylus restarted"
+msgstr ""
+
+#: inkslate/window.py:509
+msgid "adb is not installed (sudo apt install adb)"
+msgstr ""
+
+#: inkslate/window.py:511
+#, python-brace-format
+msgid "{model} · USB"
+msgstr ""
+
+#: inkslate/window.py:513
+msgid "Allow USB debugging on the tablet"
+msgstr ""
+
+#: inkslate/window.py:515
+msgid "Tablet is not responding (replug the cable)"
+msgstr ""
+
+#: inkslate/window.py:517
+#, python-brace-format
+msgid "Connected over Wi-Fi ({ip})"
+msgstr ""
+
+#: inkslate/window.py:519
+msgid "Not connected · plug in the cable"
+msgstr ""
+
+#: inkslate/window.py:525
+msgid "Connected"
+msgstr ""
+
+#: inkslate/window.py:527
+msgid "fullscreen"
+msgstr ""
+
+#: inkslate/window.py:529
+msgid "in the background"
+msgstr ""
+
+#: inkslate/window.py:532
+msgid "Not open"
+msgstr ""
+
+#: inkslate/window.py:539
+msgid "charging"
+msgstr ""
+
+#: inkslate/window.py:545
+msgid "Running"
+msgstr ""
+
+#: inkslate/window.py:549
+msgid "Weylus not found. Install it or set its path in config.json"
+msgstr ""
+
+#: inkslate/window.py:550
+msgid "Keeps stopping; see the log (is another Weylus using the ports?)"
+msgstr ""
+
+#: inkslate/window.py:551
+msgid "Restarting…"
+msgstr ""
+
+#: inkslate/window.py:552
+msgid "Stopped"
+msgstr ""
+
+#: inkslate/window.py:554
+msgid "not found"
+msgstr ""
+
+#: inkslate/window.py:578
+#, python-brace-format
+msgid "At most {w}×{h}"
+msgstr ""
+
+#: inkslate/window.py:638
+msgid "Copied"
+msgstr ""

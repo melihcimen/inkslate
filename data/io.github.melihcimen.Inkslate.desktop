@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Inkslate
+GenericName=Tablet Pen Input
+GenericName[tr]=Tablet Kalem Girdisi
+Comment=Use an Android tablet as a graphics tablet
+Comment[tr]=Android tableti çizim tableti olarak kullan
+Exec=inkslate
+Icon=io.github.melihcimen.Inkslate
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=tablet;pen;stylus;weylus;drawing;kalem;çizim;
+StartupNotify=true
