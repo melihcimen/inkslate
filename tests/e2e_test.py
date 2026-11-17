@@ -441,6 +441,76 @@ def main():
         lbls = page.js("Array.from(document.querySelectorAll('#inkslate-bar .lbl')).map(l => l.textContent).join('|')")
         check("toolbar labels are short", lbls.split("|")[0] in ("Pan", "Kaydır") and "Space" not in lbls, lbls)
 
+        # ---- auto-hide: the top bar waits as a strip; a hovering pen or a tap brings it out
+        inkslate(env, "--set", "tablet.toolbar.autohide=true")
+        wait_for(lambda: page.js("document.getElementById('inkslate-bar').classList.contains('tucked')"), timeout=5)
+        time.sleep(0.5)
+        bar = json.loads(page.js("JSON.stringify(document.getElementById('inkslate-bar').getBoundingClientRect())"))
+        check("auto-hide: only a strip of the bar is on screen", bar["bottom"] < 30 and bar["bottom"] > 4, str(bar))
+        cx = bar["x"] + bar["width"] / 2
+        page.pen("move", cx, 300, buttons=0)
+        page.pen("move", cx, 12, buttons=0)
+        time.sleep(0.5)
+        check("a pen hovering over the strip brings the bar out",
+              not page.js("document.getElementById('inkslate-bar').classList.contains('tucked')"))
+        page.pen("move", 640, 600, buttons=0)
+        time.sleep(1.2)
+        check("the bar goes back when the pen moves away",
+              page.js("document.getElementById('inkslate-bar').classList.contains('tucked')"))
+        keyboard.mark()
+        page.mouse_click(cx, 6)
+        time.sleep(0.4)
+        check("a tap on the strip brings the bar out without pressing a button",
+              not page.js("document.getElementById('inkslate-bar').classList.contains('tucked')")
+              and "KEY_" not in keyboard.text(), keyboard.text()[-120:])
+        inkslate(env, "--set", "tablet.toolbar.autohide=false")
+
+        # ---- steady taps: a slipping pen tap stays a click
+        time.sleep(0.6)
+        page.pen("move", 700, 600, buttons=0)
+        time.sleep(0.1)
+        stylus.mark()
+        page.pen("down", 800, 450, 0.4)
+        page.pen("move", 803, 452, 0.4)
+        page.pen("move", 805, 454, 0.4)
+        page.pen("up", 806, 454)
+        time.sleep(0.4)
+        t = stylus.text()
+        check("steady tap: a 6 px slip sends no movement", len(events(t, "ABS_X")) == 1
+              and 1 in events(t, "BTN_TOUCH") and 0 in events(t, "BTN_TOUCH"), str(events(t, "ABS_X")))
+        page.pen("move", 700, 600, buttons=0)
+        time.sleep(0.1)
+        stylus.mark()
+        page.pen("down", 800, 450, 0.4)
+        time.sleep(0.45)
+        page.pen("move", 803, 450, 0.4)
+        page.pen("up", 803, 450)
+        time.sleep(0.4)
+        check("steady tap: after a pause small moves draw again", len(set(events(stylus.text(), "ABS_X"))) >= 2,
+              str(events(stylus.text(), "ABS_X")))
+        stylus.mark()
+        page.stroke(0.4, x=700, y=450)
+        time.sleep(0.4)
+        check("steady tap: strokes still draw", len(set(events(stylus.text(), "ABS_X"))) >= 4)
+
+        # ---- Weylus' menu, restyled and translated
+        check("Weylus menu is restyled", page.js("document.getElementById('settings').classList.contains('ink-menu')"))
+        check("menu labels are replaced", page.js(
+            "document.getElementById('energysaving').parentElement.querySelector('span').textContent") == "Energy saving")
+        check("input settings come first", page.js("document.querySelector('#settings_scroll > h3').textContent") == "Input")
+        page.js("settings.visible || settings.toggle()")
+        time.sleep(0.6)
+        sw = json.loads(page.js("JSON.stringify(document.getElementById('enable_touch').getBoundingClientRect())"))
+        before = page.js("settings.checks.get('enable_touch').checked")
+        page.mouse_click(sw["x"] + sw["width"] / 2, sw["y"] + sw["height"] / 2)
+        time.sleep(0.4)
+        check("menu switches still work", page.js("settings.checks.get('enable_touch').checked") == (not before),
+              f"{sw}")
+        inkslate(env, "--native", f"enable_touch={'true' if before else 'false'}")
+        page.js("settings.visible && settings.toggle()")
+        js_errors = page.js("document.getElementById('log').textContent")
+        check("still no errors in the Weylus page log", not js_errors.strip(), js_errors.strip()[:200])
+
         # ---- control channel refuses other origins
         try:
             import socket

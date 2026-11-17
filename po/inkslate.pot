@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 12:37+0300\n"
+"POT-Creation-Date: 2026-11-17 12:55+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -97,6 +97,112 @@ msgstr ""
 msgid "Built on"
 msgstr ""
 
+#: inkslate/payload.py:52
+msgid "Tablet settings"
+msgstr ""
+
+#: inkslate/payload.py:53 inkslate/window.py:203
+msgid "Input"
+msgstr ""
+
+#: inkslate/payload.py:54 inkslate/payload.py:60 inkslate/window.py:247
+#: inkslate/window.py:728
+msgid "Video"
+msgstr ""
+
+#: inkslate/payload.py:55 inkslate/window.py:104 inkslate/window.py:204
+#: inkslate/window.py:325
+msgid "Pen"
+msgstr ""
+
+#: inkslate/payload.py:56 inkslate/window.py:205
+msgid "Finger input"
+msgstr ""
+
+#: inkslate/payload.py:57 inkslate/window.py:207
+msgid "Mouse"
+msgstr ""
+
+#: inkslate/payload.py:58 inkslate/window.py:208
+msgid "uinput"
+msgstr ""
+
+#: inkslate/payload.py:59 inkslate/window.py:214
+msgid "Minimum pressure"
+msgstr ""
+
+#: inkslate/payload.py:61 inkslate/window.py:173 inkslate/window.py:245
+msgid "Energy saving"
+msgstr ""
+
+#: inkslate/payload.py:62 inkslate/window.py:248
+msgid "Fill the screen"
+msgstr ""
+
+#: inkslate/payload.py:63 inkslate/window.py:249
+msgid "Show the cursor in the video"
+msgstr ""
+
+#: inkslate/payload.py:64 inkslate/window.py:250
+msgid "Low latency"
+msgstr ""
+
+#: inkslate/payload.py:65 inkslate/window.py:261
+msgid "Maximum video resolution"
+msgstr ""
+
+#: inkslate/payload.py:66
+msgid "Frame interval"
+msgstr ""
+
+#: inkslate/payload.py:67
+msgid "Frame rate"
+msgstr ""
+
+#: inkslate/payload.py:68 inkslate/window.py:265
+msgid "Captured screen"
+msgstr ""
+
+#: inkslate/payload.py:69 inkslate/window.py:268
+msgid "Refresh the list"
+msgstr ""
+
+#: inkslate/payload.py:70 inkslate/profiles.py:92 inkslate/window.py:134
+msgid "Fullscreen"
+msgstr ""
+
+#: inkslate/payload.py:71
+msgid "Device name"
+msgstr ""
+
+#: inkslate/payload.py:72
+msgid "Optional, to tell several tablets apart"
+msgstr ""
+
+#: inkslate/payload.py:73
+msgid "Swap side"
+msgstr ""
+
+#: inkslate/payload.py:74
+msgid "Hide until reload"
+msgstr ""
+
+#: inkslate/payload.py:75
+msgid "Frames per second:"
+msgstr ""
+
+#: inkslate/payload.py:76
+msgid "Custom input area"
+msgstr ""
+
+#: inkslate/payload.py:77
+msgid "Use the custom input area"
+msgstr ""
+
+#: inkslate/payload.py:78
+msgid "Debug overlay"
+msgstr ""
+
 #: inkslate/profiles.py:66
 msgid "Generic"
 msgstr ""
@@ -155,10 +261,6 @@ msgstr ""
 
 #: inkslate/profiles.py:91
 msgid "Toggle finger input"
-msgstr ""
-
-#: inkslate/profiles.py:92 inkslate/window.py:134
-msgid "Fullscreen"
 msgstr ""
 
 #: inkslate/profiles.py:93
@@ -241,19 +343,15 @@ msgstr ""
 msgid "Tablet"
 msgstr ""
 
-#: inkslate/window.py:104 inkslate/window.py:204 inkslate/window.py:325
-msgid "Pen"
-msgstr ""
-
-#: inkslate/window.py:105 inkslate/window.py:381
+#: inkslate/window.py:105 inkslate/window.py:397
 msgid "Area"
 msgstr ""
 
-#: inkslate/window.py:106 inkslate/window.py:487
+#: inkslate/window.py:106 inkslate/window.py:511
 msgid "Buttons"
 msgstr ""
 
-#: inkslate/window.py:107 inkslate/window.py:128 inkslate/window.py:664
+#: inkslate/window.py:107 inkslate/window.py:128 inkslate/window.py:688
 msgid "Connection"
 msgstr ""
 
@@ -305,10 +403,6 @@ msgstr ""
 msgid "Quick settings"
 msgstr ""
 
-#: inkslate/window.py:173 inkslate/window.py:245
-msgid "Energy saving"
-msgstr ""
-
 #: inkslate/window.py:174
 msgid "No video, black tablet screen; pen still works"
 msgstr ""
@@ -323,24 +417,8 @@ msgid ""
 "on the tablet."
 msgstr ""
 
-#: inkslate/window.py:203
-msgid "Input"
-msgstr ""
-
-#: inkslate/window.py:205
-msgid "Finger input"
-msgstr ""
-
 #: inkslate/window.py:206
 msgid "Off: fingers only do gestures and can't draw by accident"
-msgstr ""
-
-#: inkslate/window.py:207
-msgid "Mouse"
-msgstr ""
-
-#: inkslate/window.py:208
-msgid "uinput"
 msgstr ""
 
 #: inkslate/window.py:209
@@ -353,10 +431,6 @@ msgstr ""
 
 #: inkslate/window.py:210
 msgid "Puts the Weylus menu on the right"
-msgstr ""
-
-#: inkslate/window.py:214
-msgid "Minimum pressure"
 msgstr ""
 
 #: inkslate/window.py:215
@@ -397,28 +471,12 @@ msgstr ""
 msgid "Pen grace period (ms)"
 msgstr ""
 
-#: inkslate/window.py:244 inkslate/window.py:378
+#: inkslate/window.py:244 inkslate/window.py:394
 msgid "Screen"
 msgstr ""
 
 #: inkslate/window.py:246
 msgid "No video, black screen (saves the tablet's battery)"
-msgstr ""
-
-#: inkslate/window.py:247 inkslate/window.py:704
-msgid "Video"
-msgstr ""
-
-#: inkslate/window.py:248
-msgid "Fill the screen"
-msgstr ""
-
-#: inkslate/window.py:249
-msgid "Show the cursor in the video"
-msgstr ""
-
-#: inkslate/window.py:250
-msgid "Low latency"
 msgstr ""
 
 #: inkslate/window.py:251
@@ -427,18 +485,6 @@ msgstr ""
 
 #: inkslate/window.py:254
 msgid "Maximum frame rate (FPS)"
-msgstr ""
-
-#: inkslate/window.py:261
-msgid "Maximum video resolution"
-msgstr ""
-
-#: inkslate/window.py:265
-msgid "Captured screen"
-msgstr ""
-
-#: inkslate/window.py:268
-msgid "Refresh the list"
 msgstr ""
 
 #: inkslate/window.py:291
@@ -503,449 +549,491 @@ msgstr ""
 msgid "Steadies shaky lines, adds a little lag"
 msgstr ""
 
-#: inkslate/window.py:356
+#: inkslate/window.py:337
+msgid "Clicking with the pen"
+msgstr ""
+
+#: inkslate/window.py:338
+msgid ""
+"The pen tip slips a little when it presses the glass, especially when the "
+"pen is tilted, and the PC sees a short drag instead of a click."
+msgstr ""
+
+#: inkslate/window.py:340
+msgid "Steady taps"
+msgstr ""
+
+#: inkslate/window.py:341
+msgid "Hold the position still until the tip really moves"
+msgstr ""
+
+#: inkslate/window.py:346
+msgid "Tap tolerance"
+msgstr ""
+
+#: inkslate/window.py:347
+msgid ""
+"In the tablet's pixels. Higher makes clicks easier, but very small strokes "
+"start a little later"
+msgstr ""
+
+#: inkslate/window.py:372
 #, python-brace-format
 msgid "Pen: {raw:.2f} → sent: {out:.2f}"
 msgstr ""
 
-#: inkslate/window.py:357
+#: inkslate/window.py:373
 msgid "eraser"
 msgstr ""
 
-#: inkslate/window.py:368
+#: inkslate/window.py:384
 msgid "Screen area"
 msgstr ""
 
-#: inkslate/window.py:369
+#: inkslate/window.py:385
 msgid ""
 "The part of the PC screen the tablet controls. Drag across the screens below "
 "to draw your own area."
 msgstr ""
 
-#: inkslate/window.py:382
+#: inkslate/window.py:398
 msgid "Whole screen"
 msgstr ""
 
-#: inkslate/window.py:382
+#: inkslate/window.py:398
 msgid "Left half"
 msgstr ""
 
-#: inkslate/window.py:382
+#: inkslate/window.py:398
 msgid "Right half"
 msgstr ""
 
-#: inkslate/window.py:383
+#: inkslate/window.py:399
 msgid "Top half"
 msgstr ""
 
-#: inkslate/window.py:383
+#: inkslate/window.py:399
 msgid "Bottom half"
 msgstr ""
 
-#: inkslate/window.py:383
+#: inkslate/window.py:399
 msgid "Custom (drawn above)"
 msgstr ""
 
-#: inkslate/window.py:387
+#: inkslate/window.py:403
 msgid "Keep proportions"
 msgstr ""
 
-#: inkslate/window.py:388
+#: inkslate/window.py:404
 msgid ""
 "Use only the part of the tablet with the same shape as the area, so circles "
 "stay round"
 msgstr ""
 
-#: inkslate/window.py:395
+#: inkslate/window.py:411
 msgid "Tablet screen"
 msgstr ""
 
-#: inkslate/window.py:396
+#: inkslate/window.py:412
 msgid "Shown while energy saving is on."
 msgstr ""
 
-#: inkslate/window.py:401
+#: inkslate/window.py:417
 msgid "Background"
 msgstr ""
 
-#: inkslate/window.py:404
+#: inkslate/window.py:420
 msgid "Mark the unused part"
 msgstr ""
 
-#: inkslate/window.py:405
+#: inkslate/window.py:421
 msgid ""
 "When proportions are kept, the rest of the tablet is shaded and does nothing"
 msgstr ""
 
-#: inkslate/window.py:441
+#: inkslate/window.py:457
 msgid "Tablet toolbar"
 msgstr ""
 
-#: inkslate/window.py:442
+#: inkslate/window.py:458
 msgid "Buttons on the edge of the tablet screen. This is how they will look."
 msgstr ""
 
-#: inkslate/window.py:448
+#: inkslate/window.py:464
 msgid "Look"
 msgstr ""
 
-#: inkslate/window.py:449
+#: inkslate/window.py:465
 msgid "Show the toolbar"
 msgstr ""
 
-#: inkslate/window.py:452
+#: inkslate/window.py:468
 msgid "Position"
 msgstr ""
 
-#: inkslate/window.py:453
+#: inkslate/window.py:469
 msgid "Left"
 msgstr ""
 
-#: inkslate/window.py:453
+#: inkslate/window.py:469
 msgid "Right"
 msgstr ""
 
-#: inkslate/window.py:453
+#: inkslate/window.py:469
 msgid "Top"
 msgstr ""
 
-#: inkslate/window.py:453
+#: inkslate/window.py:469
 msgid "Bottom"
 msgstr ""
 
-#: inkslate/window.py:459
+#: inkslate/window.py:475
 msgid "Button size"
 msgstr ""
 
-#: inkslate/window.py:459
+#: inkslate/window.py:475
 msgid "In the tablet's pixels"
 msgstr ""
 
-#: inkslate/window.py:463
+#: inkslate/window.py:479
 msgid "Opacity"
 msgstr ""
 
-#: inkslate/window.py:463
+#: inkslate/window.py:479
 msgid "While you're not touching it"
 msgstr ""
 
-#: inkslate/window.py:464
+#: inkslate/window.py:480
 msgid "Style"
 msgstr ""
 
-#: inkslate/window.py:464 inkslate/window.py:729
+#: inkslate/window.py:480 inkslate/window.py:753
 msgid "Dark"
 msgstr ""
 
-#: inkslate/window.py:464 inkslate/window.py:729
+#: inkslate/window.py:480 inkslate/window.py:753
 msgid "Light"
 msgstr ""
 
-#: inkslate/window.py:472
+#: inkslate/window.py:481
+msgid "Also used for the settings menu on the tablet"
+msgstr ""
+
+#: inkslate/window.py:489
 msgid "Highlight colour"
 msgstr ""
 
-#: inkslate/window.py:472
+#: inkslate/window.py:489
 msgid "For buttons that are on, like the eraser"
 msgstr ""
 
-#: inkslate/window.py:474
+#: inkslate/window.py:491
 msgid "Use the desktop's accent colour"
 msgstr ""
 
-#: inkslate/window.py:477
+#: inkslate/window.py:494
 msgid "Show labels"
 msgstr ""
 
-#: inkslate/window.py:480
+#: inkslate/window.py:497
 msgid "Fade while drawing"
 msgstr ""
 
-#: inkslate/window.py:481
+#: inkslate/window.py:498
 msgid "Almost hidden while the pen is on the screen"
 msgstr ""
 
-#: inkslate/window.py:488
+#: inkslate/window.py:502
+msgid "Hide at the edge"
+msgstr ""
+
+#: inkslate/window.py:503
+msgid ""
+"Only a thin strip stays visible. Hold the pen above it, or tap it, and the "
+"toolbar slides out"
+msgstr ""
+
+#: inkslate/window.py:512
 msgid ""
 "Shortcuts are sent for your keyboard layout. Pick an app preset, or set your "
 "own shortcut on any button."
 msgstr ""
 
-#: inkslate/window.py:491
+#: inkslate/window.py:515
 msgid "Add a button"
 msgstr ""
 
-#: inkslate/window.py:496
+#: inkslate/window.py:520
 msgid "App preset"
 msgstr ""
 
-#: inkslate/window.py:497
+#: inkslate/window.py:521
 msgid "Which shortcuts undo, redo, zoom and the others send"
 msgstr ""
 
-#: inkslate/window.py:518
+#: inkslate/window.py:542
 #, python-brace-format
 msgid "Button {n}"
 msgstr ""
 
-#: inkslate/window.py:525
+#: inkslate/window.py:549
 msgid "Set shortcut…"
 msgstr ""
 
-#: inkslate/window.py:526
+#: inkslate/window.py:550
 msgid "Record a shortcut"
 msgstr ""
 
-#: inkslate/window.py:534
+#: inkslate/window.py:558
 msgid "Move up"
 msgstr ""
 
-#: inkslate/window.py:536
+#: inkslate/window.py:560
 msgid "Move down"
 msgstr ""
 
-#: inkslate/window.py:538
+#: inkslate/window.py:562
 msgid "Remove"
 msgstr ""
 
-#: inkslate/window.py:595
+#: inkslate/window.py:619
 msgid "Press the shortcut"
 msgstr ""
 
-#: inkslate/window.py:596
+#: inkslate/window.py:620
 msgid ""
 "Press the key combination this button should send, for example Ctrl+B. For a "
 "button that holds a key, a single Ctrl, Shift or Alt also works. Escape "
 "cancels."
 msgstr ""
 
-#: inkslate/window.py:599
+#: inkslate/window.py:623
 msgid "Cancel"
 msgstr ""
 
-#: inkslate/window.py:665
+#: inkslate/window.py:689
 msgid ""
 "USB (recommended for Android) needs USB debugging on the tablet. Wi-Fi works "
 "with any tablet's browser, iPads included, and needs the access code."
 msgstr ""
 
-#: inkslate/window.py:667
+#: inkslate/window.py:691
 msgid "Mode"
 msgstr ""
 
-#: inkslate/window.py:667 inkslate/window.py:676
+#: inkslate/window.py:691 inkslate/window.py:700
 msgid "USB"
 msgstr ""
 
-#: inkslate/window.py:667
+#: inkslate/window.py:691
 msgid "Wi-Fi"
 msgstr ""
 
-#: inkslate/window.py:671
+#: inkslate/window.py:695
 msgid "Access code (Wi-Fi)"
 msgstr ""
 
-#: inkslate/window.py:677
+#: inkslate/window.py:701
 msgid "Open the page when the tablet is plugged in"
 msgstr ""
 
-#: inkslate/window.py:680
+#: inkslate/window.py:704
 msgid "Switch the page to fullscreen"
 msgstr ""
 
-#: inkslate/window.py:681
+#: inkslate/window.py:705
 msgid "Through Chrome's USB debugging connection"
 msgstr ""
 
-#: inkslate/window.py:685
+#: inkslate/window.py:709
 msgid "Dim the tablet in energy saving"
 msgstr ""
 
-#: inkslate/window.py:686
+#: inkslate/window.py:710
 msgid ""
 "Restored when energy saving is turned off or the page closes. If you unplug "
 "the cable first, it is restored the next time you plug it in."
 msgstr ""
 
-#: inkslate/window.py:690
+#: inkslate/window.py:714
 msgid "Keep the tablet screen on"
 msgstr ""
 
-#: inkslate/window.py:691
+#: inkslate/window.py:715
 msgid "While the page is open"
 msgstr ""
 
-#: inkslate/window.py:694
+#: inkslate/window.py:718
 msgid "Fullscreen on first tap"
 msgstr ""
 
-#: inkslate/window.py:695
+#: inkslate/window.py:719
 msgid "For Wi-Fi, where automatic fullscreen isn't possible"
 msgstr ""
 
-#: inkslate/window.py:698
+#: inkslate/window.py:722
 msgid "Start with the Weylus menu closed"
 msgstr ""
 
-#: inkslate/window.py:699
+#: inkslate/window.py:723
 msgid "It can still be opened with the ⠿ handle on the tablet"
 msgstr ""
 
-#: inkslate/window.py:705
+#: inkslate/window.py:729
 msgid ""
 "Only matters if you want to see the PC screen on the tablet. Changing these "
 "restarts Weylus."
 msgstr ""
 
-#: inkslate/window.py:707
+#: inkslate/window.py:731
 msgid "Wayland screen capture (PipeWire)"
 msgstr ""
 
-#: inkslate/window.py:708
+#: inkslate/window.py:732
 msgid ""
 "Without it the video is black on Wayland; it asks for screen-sharing "
 "permission"
 msgstr ""
 
-#: inkslate/window.py:712
+#: inkslate/window.py:736
 msgid "Hardware encoding (VA-API)"
 msgstr ""
 
-#: inkslate/window.py:713
+#: inkslate/window.py:737
 msgid "Keep the maximum video resolution at the right end"
 msgstr ""
 
-#: inkslate/window.py:716
+#: inkslate/window.py:740
 msgid "NVIDIA encoding (NVENC)"
 msgstr ""
 
-#: inkslate/window.py:717
+#: inkslate/window.py:741
 msgid "Wakes the discrete GPU and costs battery"
 msgstr ""
 
-#: inkslate/window.py:722
+#: inkslate/window.py:746
 msgid "System"
 msgstr ""
 
-#: inkslate/window.py:723
+#: inkslate/window.py:747
 msgid "Start at login"
 msgstr ""
 
-#: inkslate/window.py:724
+#: inkslate/window.py:748
 msgid "Runs in the background without opening this window"
 msgstr ""
 
-#: inkslate/window.py:729
+#: inkslate/window.py:753
 msgid "Appearance"
 msgstr ""
 
-#: inkslate/window.py:729
+#: inkslate/window.py:753
 msgid "Follow the system"
 msgstr ""
 
-#: inkslate/window.py:733
+#: inkslate/window.py:757
 msgid "Language"
 msgstr ""
 
-#: inkslate/window.py:733
+#: inkslate/window.py:757
 msgid "System default"
 msgstr ""
 
-#: inkslate/window.py:734
+#: inkslate/window.py:758
 msgid "Applies after restarting Inkslate"
 msgstr ""
 
-#: inkslate/window.py:737
+#: inkslate/window.py:761
 msgid "Weylus program"
 msgstr ""
 
-#: inkslate/window.py:753
+#: inkslate/window.py:777
 msgid "Restart Inkslate to change the language"
 msgstr ""
 
-#: inkslate/window.py:765
+#: inkslate/window.py:789
 msgid "Weylus restarted"
 msgstr ""
 
-#: inkslate/window.py:777
+#: inkslate/window.py:801
 msgid "adb is not installed (sudo apt install adb)"
 msgstr ""
 
-#: inkslate/window.py:779
+#: inkslate/window.py:803
 #, python-brace-format
 msgid "{model} · USB"
 msgstr ""
 
-#: inkslate/window.py:781
+#: inkslate/window.py:805
 msgid "Allow USB debugging on the tablet"
 msgstr ""
 
-#: inkslate/window.py:783
+#: inkslate/window.py:807
 msgid "Tablet is not responding (replug the cable)"
 msgstr ""
 
-#: inkslate/window.py:785
+#: inkslate/window.py:809
 #, python-brace-format
 msgid "Connected over Wi-Fi ({ip})"
 msgstr ""
 
-#: inkslate/window.py:787
+#: inkslate/window.py:811
 msgid "Not connected · plug in the cable"
 msgstr ""
 
-#: inkslate/window.py:793
+#: inkslate/window.py:817
 msgid "Connected"
 msgstr ""
 
-#: inkslate/window.py:795
+#: inkslate/window.py:819
 msgid "fullscreen"
 msgstr ""
 
-#: inkslate/window.py:797
+#: inkslate/window.py:821
 msgid "in the background"
 msgstr ""
 
-#: inkslate/window.py:800
+#: inkslate/window.py:824
 msgid "Not open"
 msgstr ""
 
-#: inkslate/window.py:807
+#: inkslate/window.py:831
 msgid "charging"
 msgstr ""
 
-#: inkslate/window.py:814
+#: inkslate/window.py:838
 msgid "Running"
 msgstr ""
 
-#: inkslate/window.py:818
+#: inkslate/window.py:842
 msgid "Weylus not found. Install it or set its path in config.json"
 msgstr ""
 
-#: inkslate/window.py:819
+#: inkslate/window.py:843
 msgid "Keeps stopping; see the log (is another Weylus using the ports?)"
 msgstr ""
 
-#: inkslate/window.py:820
+#: inkslate/window.py:844
 msgid "Restarting…"
 msgstr ""
 
-#: inkslate/window.py:821
+#: inkslate/window.py:845
 msgid "Stopped"
 msgstr ""
 
-#: inkslate/window.py:824
+#: inkslate/window.py:848
 msgid "not found"
 msgstr ""
 
-#: inkslate/window.py:855
+#: inkslate/window.py:879
 #, python-brace-format
 msgid "At most {w}×{h}"
 msgstr ""
 
-#: inkslate/window.py:871
+#: inkslate/window.py:895
 msgid "All screens"
 msgstr ""
 
-#: inkslate/window.py:973
+#: inkslate/window.py:1001
 msgid "Copied"
 msgstr ""

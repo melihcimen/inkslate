@@ -332,6 +332,22 @@ class MainWindow(Adw.ApplicationWindow):
                                   lambda s: self._set_tablet("smoothing", round(s.get_value(), 2)))
         g.add(_scale_row(_("Smoothing"), _("Steadies shaky lines, adds a little lag"), self.scale_smooth))
         page.add(g)
+
+        g = Adw.PreferencesGroup(
+            title=_("Clicking with the pen"),
+            description=_("The pen tip slips a little when it presses the glass, especially when the pen "
+                          "is tilted, and the PC sees a short drag instead of a click."))
+        self.sw_tap = Adw.SwitchRow(title=_("Steady taps"),
+                                    subtitle=_("Hold the position still until the tip really moves"))
+        self.sw_tap.connect("notify::active", lambda r, _p: self._set_sub("tap", "enabled", r.get_active()))
+        g.add(self.sw_tap)
+        self.scale_tap = _scale(2, 30, 1, 0)
+        self.scale_tap.connect("value-changed", lambda s: self._set_sub("tap", "radius", int(s.get_value())))
+        self.row_tap = _scale_row(_("Tap tolerance"),
+                                  _("In the tablet's pixels. Higher makes clicks easier, but very "
+                                    "small strokes start a little later"), self.scale_tap)
+        g.add(self.row_tap)
+        page.add(g)
         return page
 
     def _curve_changed(self, key, value):
@@ -461,7 +477,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.scale_opacity.connect("value-changed",
                                    lambda s: self._set_sub("toolbar", "opacity", round(s.get_value(), 2)))
         g.add(_scale_row(_("Opacity"), _("While you're not touching it"), self.scale_opacity))
-        self.combo_bar_theme = self._string_combo(_("Style"), [("dark", _("Dark")), ("light", _("Light"))])
+        self.combo_bar_theme = self._string_combo(_("Style"), [("dark", _("Dark")), ("light", _("Light"))],
+                                                  _("Also used for the settings menu on the tablet"))
         self.combo_bar_theme.connect("notify::selected", lambda r, _p: self._set_sub(
             "toolbar", "theme", r.keys[r.get_selected()]))
         g.add(self.combo_bar_theme)
@@ -481,6 +498,13 @@ class MainWindow(Adw.ApplicationWindow):
                                      subtitle=_("Almost hidden while the pen is on the screen"))
         self.sw_fade.connect("notify::active", lambda r, _p: self._set_sub("toolbar", "fade", r.get_active()))
         g.add(self.sw_fade)
+        self.sw_autohide = Adw.SwitchRow(
+            title=_("Hide at the edge"),
+            subtitle=_("Only a thin strip stays visible. Hold the pen above it, or tap it, and the "
+                       "toolbar slides out"))
+        self.sw_autohide.connect("notify::active",
+                                 lambda r, _p: self._set_sub("toolbar", "autohide", r.get_active()))
+        g.add(self.sw_autohide)
         page.add(g)
 
         self.grp_buttons = Adw.PreferencesGroup(
@@ -910,6 +934,9 @@ class MainWindow(Adw.ApplicationWindow):
             self.sw_eraser.set_active(t["eraser"])
             self.sw_quick_eraser.set_active(t["eraser"])
             self.scale_smooth.set_value(t["smoothing"])
+            self.sw_tap.set_active(t["tap"]["enabled"])
+            self.scale_tap.set_value(t["tap"]["radius"])
+            self.row_tap.set_sensitive(t["tap"]["enabled"])
 
             tb = t["toolbar"]
             self.sw_toolbar.set_active(tb["enabled"])
@@ -920,6 +947,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.color_accent.set_rgba(_rgba(tb["accent"] or self.app.accent_hex()))
             self.sw_labels.set_active(tb["labels"])
             self.sw_fade.set_active(tb["fade"])
+            self.sw_autohide.set_active(tb["autohide"])
             self._select_key(self.combo_profile, self.cfg["profile"])
 
             self.sw_gestures.set_active(t["gestures"]["enabled"])

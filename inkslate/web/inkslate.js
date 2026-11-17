@@ -27,6 +27,7 @@
     const DEFAULTS = {
         curve: { in_min: 0, in_max: 1, gamma: 1 },
         smoothing: 0,
+        tap: { enabled: true, radius: 8, ms: 300 },
         eraser: false,
         palm: { enabled: true, ms: 500 },
         gestures: { enabled: true, two: "undo", three: "redo" },
@@ -39,6 +40,7 @@
             accent: "#3584e4",
             labels: false,
             fade: true,
+            autohide: false,
             buttons: [
                 { action: "undo", kind: "key", icon: "undo", title: "Undo" },
                 { action: "redo", kind: "key", icon: "redo", title: "Redo" },
@@ -51,6 +53,7 @@
         },
         screen: { background: "#000000", show_area: true },
         area: { display: FULL, aspect: 0 },
+        strings: {},
         wake_lock: true,
         fullscreen_on_tap: false,
         hide_menu: true,
@@ -69,6 +72,7 @@
         rejectedTail: new Set(),      // rejected touches whose trailing out/leave events are pending
         forwardedTouches: new Map(),  // pointer_id -> last PointerEvent sent to Weylus
         smooth: null,
+        tap: null,                    // pen-down point while a tap is held steady
         gesture: { active: new Map(), max: 0, start: 0, moved: false, cancelled: false },
         tempEraser: false,
         penMode: null,                // "right" | "middle": strokes become mouse-button drags
@@ -77,6 +81,9 @@
         wakeLock: null,
         stateTimer: null,
         fadeTimer: null,
+        tuckTimer: null,
+        revealedBy: null,             // "pen" | "touch" while the auto-hidden bar is out
+        pressing: 0,                  // toolbar buttons currently held down
         started: false,
         menuHandled: false,
     };
@@ -213,7 +220,8 @@
         const now = performance.now();
         if (pt === "pen") {
             state.lastPenSeen = now;
-            fadeBar();
+            if (type === "pointerdown" || (event.buttons & BUTTON.PRIMARY))
+                fadeBar();
             if (cfg.palm.enabled)
                 cancelForwardedTouches();
             return true;
@@ -263,6 +271,8 @@
             else if (t === "pointerdown" || (t === "pointermove" && state.forwardedTouches.has(pe.pointer_id)))
                 state.forwardedTouches.set(pe.pointer_id, pe);
         }
+        if (type === "pen")
+            steadyTap(pe, rect);
         mapArea(pe, aspect);
         if (type !== "pen")
             return [pe];
@@ -273,6 +283,36 @@
             reportPressure(raw, pe);
         const converted = penModeStroke(pe);
         return converted ? [converted] : [pe];
+    }
+
+    // A pen tap should be a click, but the tip slips a little when it presses the glass (more so
+    // when the pen is tilted), and the PC then sees a short drag. Hold the position still after
+    // the tip goes down until it really moves (more than `radius` CSS px) or `ms` have passed.
+    function steadyTap(pe, rect) {
+        const tap = cfg.tap;
+        if (!tap || !tap.enabled || !(tap.radius > 0))
+            return;
+        const t = pe.event_type;
+        if (t === "pointerdown") {
+            state.tap = { x: pe.x, y: pe.y, at: performance.now(), held: true };
+            return;
+        }
+        const s = state.tap;
+        if (!s)
+            return;
+        if (s.held) {
+            const w = rect && rect.width ? rect.width : window.innerWidth;
+            const h = rect && rect.height ? rect.height : window.innerHeight;
+            const moved = Math.hypot((pe.x - s.x) * w, (pe.y - s.y) * h);
+            if (moved > tap.radius || performance.now() - s.at > tap.ms) {
+                s.held = false;
+            } else {
+                pe.x = s.x;
+                pe.y = s.y;
+            }
+        }
+        if (ENDS.includes(t))
+            state.tap = null;
     }
 
     // A palm resting on the screen when the pen shows up: lift the touches Weylus already knows about.
@@ -520,14 +560,29 @@
   --btn: rgba(255, 255, 255, 0.08); --btn-press: rgba(255, 255, 255, 0.25);
   position: fixed; z-index: 50; display: flex; gap: calc(var(--s) * 0.11); padding: calc(var(--s) * 0.11);
   border-radius: calc(var(--s) * 0.26); background: var(--bg); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-  opacity: var(--o); transition: opacity 0.25s; touch-action: none; user-select: none; -webkit-user-select: none; }
+  opacity: var(--o); transition: opacity 0.25s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  touch-action: none; user-select: none; -webkit-user-select: none; --peek: 14px; }
 #inkslate-bar.light { --bg: rgba(246, 246, 246, 0.92); --fg: #222; --btn: rgba(0, 0, 0, 0.06); --btn-press: rgba(0, 0, 0, 0.16); }
 #inkslate-bar.left { left: 6px; top: 50%; transform: translateY(-50%); flex-direction: column; }
 #inkslate-bar.right { right: 6px; top: 50%; transform: translateY(-50%); flex-direction: column; }
 #inkslate-bar.top { top: 6px; left: 50%; transform: translateX(-50%); flex-direction: row; }
 #inkslate-bar.bottom { bottom: 6px; left: 50%; transform: translateX(-50%); flex-direction: row; }
 #inkslate-bar.faded { opacity: 0.12; }
-#inkslate-bar:hover, #inkslate-bar:active, #inkslate-bar.awake { opacity: 1; }
+#inkslate-bar.left.tucked { transform: translateY(-50%) translateX(calc(-100% - 6px + var(--peek))); }
+#inkslate-bar.right.tucked { transform: translateY(-50%) translateX(calc(100% + 6px - var(--peek))); }
+#inkslate-bar.top.tucked { transform: translateX(-50%) translateY(calc(-100% - 6px + var(--peek))); }
+#inkslate-bar.bottom.tucked { transform: translateX(-50%) translateY(calc(100% + 6px - var(--peek))); }
+#inkslate-bar button { transition: opacity 0.2s; }
+#inkslate-bar.tucked button { pointer-events: none; opacity: 0; }
+#inkslate-bar::after { content: ""; position: absolute; border-radius: 3px; background: var(--fg); opacity: 0;
+  transition: opacity 0.2s; pointer-events: none; }
+#inkslate-bar.left::after { right: 5px; top: 50%; width: 4px; height: min(40%, 64px); transform: translateY(-50%); }
+#inkslate-bar.right::after { left: 5px; top: 50%; width: 4px; height: min(40%, 64px); transform: translateY(-50%); }
+#inkslate-bar.top::after { bottom: 5px; left: 50%; height: 4px; width: min(40%, 64px); transform: translateX(-50%); }
+#inkslate-bar.bottom::after { top: 5px; left: 50%; height: 4px; width: min(40%, 64px); transform: translateX(-50%); }
+#inkslate-bar.tucked::after { opacity: 0.6; }
+#inkslate-bar.tucked.faded { opacity: var(--o); }
+#inkslate-bar:not(.tucked):hover, #inkslate-bar:active, #inkslate-bar.awake { opacity: 1; }
 #inkslate-bar button { width: var(--s); height: var(--s); border: none; border-radius: calc(var(--s) * 0.19);
   background: var(--btn); color: var(--fg); padding: 0; touch-action: none; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 1px; font: 600 calc(var(--s) * 0.2) system-ui, sans-serif; overflow: hidden; }
@@ -541,6 +596,93 @@
   background: rgba(40, 40, 40, 0.9); color: #eee; padding: 8px 14px; border-radius: 10px;
   font: 15px system-ui, sans-serif; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 #inkslate-toast.show { opacity: 1; }
+
+/* ---- Weylus' settings menu, restyled ---- */
+#settings.ink-menu { --ink-accent: #3584e4; --ink-panel: rgba(28, 28, 30, 0.9); --ink-fg: #f2f2f7;
+  --ink-dim: rgba(235, 235, 245, 0.6); --ink-card: rgba(255, 255, 255, 0.06); --ink-sep: rgba(255, 255, 255, 0.08);
+  --ink-field: rgba(255, 255, 255, 0.09); --ink-off: rgba(120, 120, 128, 0.36); --ink-btn: rgba(255, 255, 255, 0.1);
+  --ink-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  position: fixed !important; top: 12px; right: 12px; bottom: auto; left: auto; z-index: 60;
+  width: min(330px, calc(100vw - 80px)); max-height: calc(100% - 24px); box-sizing: border-box;
+  display: flex !important; flex-direction: column; padding: 0 !important; border-radius: 20px;
+  background: var(--ink-panel) !important; color: var(--ink-fg) !important; box-shadow: var(--ink-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+  font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; opacity: 1 !important;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) !important; }
+#settings.ink-menu.light { --ink-panel: rgba(250, 250, 252, 0.94); --ink-fg: #1c1c1e; --ink-dim: rgba(60, 60, 67, 0.6);
+  --ink-card: rgba(0, 0, 0, 0.04); --ink-sep: rgba(0, 0, 0, 0.08); --ink-field: rgba(0, 0, 0, 0.06);
+  --ink-off: rgba(120, 120, 128, 0.24); --ink-btn: rgba(0, 0, 0, 0.07); --ink-shadow: 0 12px 40px rgba(0, 0, 0, 0.18); }
+#settings.ink-menu.lefty { left: 12px; right: auto; }
+#settings.ink-menu.hide, #settings.ink-menu.vanish { transform: translateX(calc(100% + 12px)); }
+#settings.ink-menu.hide.lefty, #settings.ink-menu.vanish.lefty { transform: translateX(calc(-100% - 12px)); }
+#settings.ink-menu #handle { position: absolute; top: 0; left: -44px; right: auto; width: 32px; height: 40px;
+  padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 0;
+  background: var(--ink-panel) !important; color: var(--ink-fg) !important; box-shadow: var(--ink-shadow);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); transition: opacity 0.3s; }
+#settings.ink-menu.hide #handle { opacity: 0.55; }
+#settings.ink-menu.lefty #handle { left: auto; right: -44px; }
+#settings.ink-menu #handle svg { width: 20px; height: 20px; }
+#settings.ink-menu #settings_scroll { box-sizing: border-box; height: auto !important; flex: 1 1 auto;
+  overflow-y: auto; padding: 18px 16px 12px; overscroll-behavior: contain; scrollbar-width: thin; }
+#settings.ink-menu h2 { font-size: 20px; font-weight: 700; text-align: left; margin: 0 4px 12px; letter-spacing: -0.01em; }
+#settings.ink-menu h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--ink-dim); text-align: left; margin: 16px 8px 6px; }
+#settings.ink-menu section { background: var(--ink-card); border-radius: 14px; padding: 2px 14px; margin: 0 0 10px; }
+#settings.ink-menu section label { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 46px; margin: 0; padding: 8px 0; box-sizing: border-box; border-bottom: 1px solid var(--ink-sep); }
+#settings.ink-menu section > :last-child { border-bottom: none; }
+#settings.ink-menu .hide { display: none !important; }
+#settings.ink-menu br { display: none; }
+#settings.ink-menu label:has(> input[type=checkbox]) { flex-direction: row-reverse; }
+#settings.ink-menu label > span, #settings.ink-menu .ink-text { flex: 1 1 auto; }
+#settings.ink-menu label input:disabled + span { color: var(--ink-dim); }
+#settings.ink-menu input[type=checkbox] { -webkit-appearance: none; appearance: none; flex: none; width: 46px;
+  height: 28px; margin: 0; border-radius: 14px; background: var(--ink-off); position: relative;
+  transition: background 0.2s; cursor: pointer; }
+#settings.ink-menu input[type=checkbox]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 22px;
+  height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); transition: transform 0.2s; }
+#settings.ink-menu input[type=checkbox]:checked { background: var(--ink-accent); }
+#settings.ink-menu input[type=checkbox]:checked::before { transform: translateX(18px); }
+#settings.ink-menu input[type=checkbox]:disabled { opacity: 0.4; }
+#settings.ink-menu label:has(input[type=range]) { flex-wrap: wrap; row-gap: 2px; }
+#settings.ink-menu label:has(input[type=range]) output { order: 1; margin-left: auto; color: var(--ink-dim);
+  font-variant-numeric: tabular-nums; }
+#settings.ink-menu label:has(input[type=range]) .ink-text { flex: 1 1 0; min-width: 0; }
+#settings.ink-menu #displayoptions #leftylabel { flex-direction: row; gap: 6px; }
+#settings.ink-menu #displayoptions #leftylabel .ink-text { flex: none; }
+#settings.ink-menu .ink-unit { order: 2; flex: none; color: var(--ink-dim); margin-left: -8px; }
+#settings.ink-menu input[type=range] { order: 3; flex: 1 1 100%; width: 100%; height: 28px; margin: 0;
+  -webkit-appearance: none; appearance: none; background: transparent; }
+#settings.ink-menu input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, var(--ink-accent) var(--p, 0%), var(--ink-off) var(--p, 0%)); }
+#settings.ink-menu input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px;
+  margin-top: -8px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+#settings.ink-menu input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--ink-off); }
+#settings.ink-menu input[type=range]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--ink-accent); }
+#settings.ink-menu input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+#settings.ink-menu select, #settings.ink-menu input[type=text] { -webkit-appearance: none; appearance: none;
+  width: 100%; box-sizing: border-box; min-height: 40px; margin: 4px 0; padding: 8px 12px; border: none;
+  border-radius: 10px; background-color: var(--ink-field); color: inherit; font: inherit; }
+#settings.ink-menu select { padding-right: 34px; background-repeat: no-repeat; background-position: right 12px center;
+  background-size: 14px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+#settings.ink-menu select option { background: #2c2c2e; color: #f2f2f7; }
+#settings.ink-menu.light select option { background: #fff; color: #1c1c1e; }
+#settings.ink-menu button { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-height: 40px;
+  margin: 8px 0; padding: 8px 14px; border: none; border-radius: 10px; background: var(--ink-btn); color: inherit;
+  font: inherit; font-weight: 600; }
+#settings.ink-menu button:active { filter: brightness(1.3); }
+#settings.ink-menu label[for=window] { min-height: 0; padding: 10px 0 2px; border: none; font-size: 13px; color: var(--ink-dim); }
+#settings.ink-menu label:has(input[type=text]) { flex-direction: column; align-items: stretch; gap: 2px; }
+#settings.ink-menu label:has(input[type=text]) > span:last-child { font-size: 12px; color: var(--ink-dim); }
+#settings.ink-menu #displayoptions { display: flex; gap: 8px; background: none; padding: 0; }
+#settings.ink-menu #displayoptions label { flex: 1; justify-content: center; min-height: 40px; padding: 8px 10px;
+  border: none; border-radius: 10px; background: var(--ink-btn); font-weight: 600; text-align: center; }
+#settings.ink-menu #stats_section, #settings.ink-menu #log_section { background: none; padding: 0 8px; }
+#settings.ink-menu #stats_section label { min-height: 0; padding: 2px 0; border: none; font-size: 12px;
+  color: var(--ink-dim); justify-content: flex-start; gap: 6px; }
+#settings.ink-menu #stats_section label > span { flex: none; }
+#settings.ink-menu #log { max-width: 100%; font-size: 11px; }
 `;
         document.head.appendChild(style);
     }
@@ -555,7 +697,10 @@
         bar = document.createElement("div");
         bar.id = "inkslate-bar";
         const side = ["left", "right", "top", "bottom"].includes(tb.side) ? tb.side : "left";
-        bar.className = side + (tb.theme === "light" ? " light" : "") + (tb.labels ? " labels" : "");
+        bar.className = side + (tb.theme === "light" ? " light" : "") + (tb.labels ? " labels" : "") +
+            (tb.autohide ? " tucked" : "");
+        state.revealedBy = null;
+        state.pressing = 0;
         bar.style.setProperty("--s", Math.max(32, Math.min(120, Number(tb.size) || 54)) + "px");
         bar.style.setProperty("--o", String(Math.max(0.1, Math.min(1, Number(tb.opacity) || 0.6))));
         if (tb.accent)
@@ -580,6 +725,16 @@
         for (const t of ["pointerdown", "pointerup", "pointermove", "click"])
             bar.addEventListener(t, (e) => e.stopPropagation());
         bar.addEventListener("pointerenter", () => wakeBar());
+        // Tucked away: a tap on the visible strip only brings the bar out (the buttons ignore
+        // pointers while tucked, so the tap lands here).
+        bar.addEventListener("pointerdown", (e) => {
+            if (bar.classList.contains("tucked")) {
+                e.preventDefault();
+                revealBar(e.pointerType === "pen" ? "pen" : "touch");
+            } else if (cfg.toolbar.autohide) {
+                keepBarOut();
+            }
+        });
         document.body.appendChild(bar);
         refreshToolbar();
     }
@@ -588,6 +743,7 @@
     // holding longer than HOLD_MS (or at once with holdNow) runs onHoldStart/onHoldEnd instead.
     function pressable(btn, { onTap, onHoldStart, onHoldEnd, holdNow }) {
         let holding = false;
+        let armed = false;      // the press started on this button
         let timer = null;
         const startHold = () => {
             holding = true;
@@ -597,6 +753,9 @@
             e.preventDefault();
             btn.setPointerCapture(e.pointerId);
             holding = false;
+            if (!armed)
+                state.pressing++;
+            armed = true;
             if (!onHoldStart)
                 return;
             if (holdNow)
@@ -607,6 +766,10 @@
         const finish = (cancelled) => {
             clearTimeout(timer);
             timer = null;
+            if (!armed)
+                return;
+            armed = false;
+            state.pressing = Math.max(0, state.pressing - 1);
             if (holding) {
                 holding = false;
                 if (onHoldEnd)
@@ -666,6 +829,87 @@
         }
     }
 
+    // ---- auto-hide: the bar waits at the edge as a thin strip
+
+    const NEAR = 36;       // px around the strip / the bar where a hovering pen counts as "near"
+
+    // Where the bar sits when it is out (the tucked bar is only moved along one axis).
+    function barHome(bar) {
+        const r = bar.getBoundingClientRect();
+        const W = window.innerWidth, H = window.innerHeight;
+        if (bar.classList.contains("left"))
+            return { x0: 6, x1: 6 + r.width, y0: r.top, y1: r.bottom };
+        if (bar.classList.contains("right"))
+            return { x0: W - 6 - r.width, x1: W - 6, y0: r.top, y1: r.bottom };
+        if (bar.classList.contains("top"))
+            return { x0: r.left, x1: r.right, y0: 6, y1: 6 + r.height };
+        return { x0: r.left, x1: r.right, y0: H - 6 - r.height, y1: H - 6 };
+    }
+
+    function penNearBar(bar, x, y) {
+        const h = barHome(bar);
+        if (!bar.classList.contains("tucked"))
+            return x > h.x0 - NEAR && x < h.x1 + NEAR && y > h.y0 - NEAR && y < h.y1 + NEAR;
+        // tucked: only the strip along the edge
+        const W = window.innerWidth, H = window.innerHeight, band = 14 + NEAR;
+        if (bar.classList.contains("left"))
+            return x < band && y > h.y0 - NEAR && y < h.y1 + NEAR;
+        if (bar.classList.contains("right"))
+            return x > W - band && y > h.y0 - NEAR && y < h.y1 + NEAR;
+        if (bar.classList.contains("top"))
+            return y < band && x > h.x0 - NEAR && x < h.x1 + NEAR;
+        return y > H - band && x > h.x0 - NEAR && x < h.x1 + NEAR;
+    }
+
+    function revealBar(by) {
+        const bar = document.getElementById("inkslate-bar");
+        if (!bar)
+            return;
+        bar.classList.remove("tucked", "faded");
+        state.revealedBy = by;
+        keepBarOut();
+    }
+
+    function tuckBar() {
+        clearTimeout(state.tuckTimer);
+        const bar = document.getElementById("inkslate-bar");
+        if (!bar || !cfg.toolbar.autohide)
+            return;
+        // a held button (pan, eraser…) keeps the bar out
+        if (state.pressing > 0)
+            return keepBarOut();
+        bar.classList.add("tucked");
+        state.revealedBy = null;
+    }
+
+    // Out for a while after the last touch; a hovering pen keeps it out by itself.
+    function keepBarOut(ms) {
+        clearTimeout(state.tuckTimer);
+        state.tuckTimer = setTimeout(tuckBar, ms || (state.revealedBy === "pen" ? 1500 : 3000));
+    }
+
+    function watchPenForBar(e) {
+        if (e.pointerType !== "pen" || !cfg.toolbar.autohide)
+            return;
+        const bar = document.getElementById("inkslate-bar");
+        if (!bar)
+            return;
+        const hovering = (e.buttons & BUTTON.PRIMARY) === 0;
+        const near = penNearBar(bar, e.clientX, e.clientY);
+        const tucked = bar.classList.contains("tucked");
+        if (near && hovering) {
+            if (tucked)
+                revealBar("pen");
+            else
+                clearTimeout(state.tuckTimer);
+        } else if (!tucked) {
+            if (!near && !hovering)
+                tuckBar();               // drawing elsewhere
+            else if (!near)
+                keepBarOut(600);         // the pen moved away
+        }
+    }
+
     // Almost hide the bar while the pen is in use; it comes back when the pen leaves.
     function fadeBar() {
         const bar = document.getElementById("inkslate-bar");
@@ -695,6 +939,129 @@
         el.classList.add("show");
         clearTimeout(el._timer);
         el._timer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+
+    // ---------------------------------------------------------------- Weylus' settings menu
+
+    const MENU_ICON = '<path d="M4 7h9"/><path d="M19 7h1"/><circle cx="16" cy="7" r="2.5"/>' +
+        '<path d="M4 17h1"/><path d="M11 17h9"/><circle cx="8" cy="17" r="2.5"/>';
+
+    // Plain text inside the menu's labels becomes spans, so it can be styled and translated.
+    // The structure Weylus relies on (ids, input -> output sibling) stays as it is.
+    function wrapLabelText(label) {
+        let afterControl = false;
+        for (const n of Array.from(label.childNodes)) {
+            if (n.nodeType === 1 && (n.tagName === "OUTPUT" || (n.tagName === "INPUT" && n.type === "range")))
+                afterControl = true;
+            if (n.nodeType !== 3 || !n.textContent.trim())
+                continue;
+            const span = document.createElement("span");
+            span.className = afterControl ? "ink-unit" : "ink-text";
+            span.textContent = n.textContent.trim();
+            n.replaceWith(span);
+        }
+    }
+
+    // Input (pen, touch) first: it matters most for a pen tablet. The captured screen goes with video.
+    function reorderMenu() {
+        const heads = Array.from(document.querySelectorAll("#settings_scroll > h3"));
+        const videoHead = heads.find((h) => h.nextElementSibling && h.nextElementSibling.querySelector("#enable_video"));
+        const inputHead = heads.find((h) => h.nextElementSibling && h.nextElementSibling.querySelector("#enable_stylus"));
+        if (!videoHead || !inputHead)
+            return;
+        const videoSection = videoHead.nextElementSibling;
+        const inputSection = inputHead.nextElementSibling;
+        videoHead.before(inputHead, inputSection);
+        const select = document.getElementById("window");
+        const capture = select && select.closest("section");
+        if (capture && capture !== videoSection)
+            videoSection.after(capture);
+    }
+
+    function rangeFill(r) {
+        const min = Number(r.min || 0), max = Number(r.max || 100);
+        const p = max > min ? (r.valueAsNumber - min) / (max - min) * 100 : 0;
+        r.style.setProperty("--p", Math.max(0, Math.min(100, p)) + "%");
+    }
+
+    function setText(el, text) {
+        if (el && text)
+            el.textContent = text;
+    }
+
+    // Shorter, translated labels (the PC sends them in the user's language).
+    function localizeMenu(S) {
+        setText(document.querySelector("#settings h2"), S.title);
+        for (const h of document.querySelectorAll("#settings_scroll > h3")) {
+            const sec = h.nextElementSibling;
+            if (sec && sec.querySelector("#enable_stylus"))
+                setText(h, S.input);
+            else if (sec && sec.querySelector("#enable_video"))
+                setText(h, S.video);
+        }
+        for (const id of ["enable_video", "energysaving", "stretch", "capture_cursor", "aggressive_seeking",
+            "enable_mouse", "enable_stylus", "enable_touch", "uinput_support", "enable_custom_input_areas",
+            "enable_debug_overlay"]) {
+            const input = document.getElementById(id);
+            if (input && input.parentElement)
+                setText(input.parentElement.querySelector("span"), S[id]);
+        }
+        const rangeLabel = (id, text) => {
+            const input = document.getElementById(id);
+            const label = input && input.closest("label");
+            setText(label && label.querySelector(".ink-text"), text);
+        };
+        rangeLabel("scale_video", S.scale_video);
+        rangeLabel("frame_update_limit", S.frame_interval);
+        rangeLabel("frame_rate", S.frame_rate);
+        rangeLabel("min_pressure", S.min_pressure);
+        setText(document.querySelector('#settings label[for="window"]'), S.capture);
+        setText(document.getElementById("refresh"), S.refresh);
+        setText(document.getElementById("fullscreen"), S.fullscreen);
+        setText(document.getElementById("custom_input_areas"), S.custom_input_areas);
+        for (const [id, key] of [["leftylabel", "lefty"], ["vanish", "vanish"]]) {
+            const el = document.getElementById(id);
+            setText(el && el.querySelector(".ink-text"), S[key]);
+        }
+        const client = document.getElementById("client_name");
+        const clientLabel = client && client.closest("label");
+        if (clientLabel) {
+            const spans = clientLabel.querySelectorAll("span");
+            setText(spans[0], S.client_name);
+            if (spans.length > 1)
+                setText(spans[spans.length - 1], S.client_name_hint);
+        }
+        const fps = document.getElementById("fps");
+        setText(fps && fps.closest("label") && fps.closest("label").querySelector("span"), S.fps);
+    }
+
+    function styleMenu() {
+        const menu = document.getElementById("settings");
+        if (!menu)
+            return;
+        try {
+            if (!menu.classList.contains("ink-menu")) {
+                const handle = document.getElementById("handle");
+                if (handle)
+                    handle.innerHTML = SVG_OPEN + MENU_ICON + "</svg>";
+                for (const label of menu.querySelectorAll("label"))
+                    wrapLabelText(label);
+                reorderMenu();
+                for (const r of menu.querySelectorAll("input[type=range]")) {
+                    r.addEventListener("input", () => rangeFill(r));
+                    r.addEventListener("change", () => rangeFill(r));
+                }
+                menu.classList.add("ink-menu");
+            }
+            for (const r of menu.querySelectorAll("input[type=range]"))
+                rangeFill(r);
+            menu.classList.toggle("light", cfg.toolbar.theme === "light");
+            menu.style.setProperty("--ink-accent", cfg.toolbar.accent || "#3584e4");
+            localizeMenu(cfg.strings || {});
+        } catch (err) {
+            console.warn("inkslate: menu styling failed", err);
+        }
     }
 
     // ---------------------------------------------------------------- screen
@@ -914,6 +1281,7 @@
                 cfg = merge(DEFAULTS, msg.config);
                 saveConfig();
                 buildToolbar();
+                styleMenu();
                 drawScreen();
                 updateWakeLock();
                 scheduleState();
@@ -962,6 +1330,8 @@
         injectStyle();
         buildToolbar();
         window.addEventListener("resize", () => setTimeout(drawScreen, 50));
+        for (const t of ["pointermove", "pointerdown"])
+            window.addEventListener(t, watchPenForBar, { capture: true, passive: true });
         document.addEventListener("fullscreenchange", () => {
             setTimeout(drawScreen, 50);
             scheduleState();
@@ -975,6 +1345,7 @@
                 document.body.requestFullscreen({ navigationUI: "hide" }).catch(() => { });
         }, true);
         updateWakeLock();
+        styleMenu();
         hideMenuOnce();   // uses the last config the PC sent (kept in localStorage)
         drawScreen();
         watchWeylusConnection();

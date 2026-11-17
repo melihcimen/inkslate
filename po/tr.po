@@ -64,6 +64,84 @@ msgstr "Android tableti ya da iPad'i Linux bilgisayarında her çizim uygulamas�
 msgid "Built on"
 msgstr "Temel aldığı"
 
+msgid "Tablet settings"
+msgstr "Tablet ayarları"
+
+msgid "Input"
+msgstr "Girdi"
+
+msgid "Video"
+msgstr "Görüntü"
+
+msgid "Pen"
+msgstr "Kalem"
+
+msgid "Finger input"
+msgstr "Parmak girdisi"
+
+msgid "Mouse"
+msgstr "Fare"
+
+msgid "uinput"
+msgstr "uinput"
+
+msgid "Minimum pressure"
+msgstr "En düşük basınç"
+
+msgid "Energy saving"
+msgstr "Enerji tasarrufu"
+
+msgid "Fill the screen"
+msgstr "Ekranı doldur"
+
+msgid "Show the cursor in the video"
+msgstr "İmleci görüntüde göster"
+
+msgid "Low latency"
+msgstr "Düşük gecikme"
+
+msgid "Maximum video resolution"
+msgstr "En yüksek görüntü çözünürlüğü"
+
+msgid "Frame interval"
+msgstr "Kare aralığı"
+
+msgid "Frame rate"
+msgstr "Kare hızı"
+
+msgid "Captured screen"
+msgstr "Yakalanan ekran"
+
+msgid "Refresh the list"
+msgstr "Listeyi yenile"
+
+msgid "Fullscreen"
+msgstr "Tam ekran"
+
+msgid "Device name"
+msgstr "Cihaz adı"
+
+msgid "Optional, to tell several tablets apart"
+msgstr "İsteğe bağlı, birden fazla tableti ayırt etmek için"
+
+msgid "Swap side"
+msgstr "Yan değiştir"
+
+msgid "Hide until reload"
+msgstr "Yenileyene kadar gizle"
+
+msgid "Frames per second:"
+msgstr "Saniyedeki kare:"
+
+msgid "Custom input area"
+msgstr "Özel giriş alanı"
+
+msgid "Use the custom input area"
+msgstr "Özel giriş alanını kullan"
+
+msgid "Debug overlay"
+msgstr "Hata ayıklama katmanı"
+
 msgid "Generic"
 msgstr "Genel"
 
@@ -108,9 +186,6 @@ msgstr "Orta tuşla sürükle"
 
 msgid "Toggle finger input"
 msgstr "Parmak girdisini aç/kapa"
-
-msgid "Fullscreen"
-msgstr "Tam ekran"
 
 msgid "Custom shortcut"
 msgstr "Özel kısayol"
@@ -172,9 +247,6 @@ msgstr "Durum"
 msgid "Tablet"
 msgstr "Tablet"
 
-msgid "Pen"
-msgstr "Kalem"
-
 msgid "Area"
 msgstr "Alan"
 
@@ -220,9 +292,6 @@ msgstr "Tabletin kamerasıyla tara. Kodun içinde erişim kodu da var."
 msgid "Quick settings"
 msgstr "Hızlı ayarlar"
 
-msgid "Energy saving"
-msgstr "Enerji tasarrufu"
-
 msgid "No video, black tablet screen; pen still works"
 msgstr "Görüntü yok, tablet ekranı siyah; kalem çalışmaya devam eder"
 
@@ -232,20 +301,8 @@ msgstr "Silgi modu"
 msgid "The tablet page is not connected. These are the settings of the Weylus menu on the tablet."
 msgstr "Tablet sayfası bağlı değil. Bunlar tabletteki Weylus menüsünün ayarlarıdır."
 
-msgid "Input"
-msgstr "Girdi"
-
-msgid "Finger input"
-msgstr "Parmak girdisi"
-
 msgid "Off: fingers only do gestures and can't draw by accident"
 msgstr "Kapalıyken parmaklar yalnızca hareket yapar, yanlışlıkla çizemez"
-
-msgid "Mouse"
-msgstr "Fare"
-
-msgid "uinput"
-msgstr "uinput"
 
 msgid "Needed for pen pressure and multi-touch"
 msgstr "Kalem basıncı ve çoklu dokunma için gerekli"
@@ -255,9 +312,6 @@ msgstr "Solak"
 
 msgid "Puts the Weylus menu on the right"
 msgstr "Weylus menüsünü sağa alır"
-
-msgid "Minimum pressure"
-msgstr "En düşük basınç"
 
 msgid "Weylus' own floor, applied before the curve"
 msgstr "Weylus'un kendi alt sınırı, eğriden önce uygulanır"
@@ -292,32 +346,11 @@ msgstr "Ekran"
 msgid "No video, black screen (saves the tablet's battery)"
 msgstr "Görüntü yok, siyah ekran (tabletin pilini korur)"
 
-msgid "Video"
-msgstr "Görüntü"
-
-msgid "Fill the screen"
-msgstr "Ekranı doldur"
-
-msgid "Show the cursor in the video"
-msgstr "İmleci görüntüde göster"
-
-msgid "Low latency"
-msgstr "Düşük gecikme"
-
 msgid "Skip ahead instead of buffering the video"
 msgstr "Görüntüyü arabelleğe almak yerine ileri atla"
 
 msgid "Maximum frame rate (FPS)"
 msgstr "En yüksek kare hızı (FPS)"
-
-msgid "Maximum video resolution"
-msgstr "En yüksek görüntü çözünürlüğü"
-
-msgid "Captured screen"
-msgstr "Yakalanan ekran"
-
-msgid "Refresh the list"
-msgstr "Listeyi yenile"
 
 msgid "Pressure curve"
 msgstr "Basınç eğrisi"
@@ -363,6 +396,24 @@ msgstr "Yumuşatma"
 
 msgid "Steadies shaky lines, adds a little lag"
 msgstr "Titrek çizgileri düzeltir, biraz gecikme ekler"
+
+msgid "Clicking with the pen"
+msgstr "Kalemle tıklama"
+
+msgid "The pen tip slips a little when it presses the glass, especially when the pen is tilted, and the PC sees a short drag instead of a click."
+msgstr "Kalem ucu cama bastırınca, özellikle kalem eğikken, biraz kayar ve bilgisayar tıklama yerine kısa bir sürükleme görür."
+
+msgid "Steady taps"
+msgstr "Sabit dokunuş"
+
+msgid "Hold the position still until the tip really moves"
+msgstr "Uç gerçekten hareket edene kadar konumu sabit tut"
+
+msgid "Tap tolerance"
+msgstr "Dokunuş toleransı"
+
+msgid "In the tablet's pixels. Higher makes clicks easier, but very small strokes start a little later"
+msgstr "Tabletin pikseliyle. Yüksek değer tıklamayı kolaylaştırır ama çok küçük çizgiler biraz geç başlar"
 
 msgid "Pen: {raw:.2f} → sent: {out:.2f}"
 msgstr "Kalem: {raw:.2f} → giden: {out:.2f}"
@@ -463,6 +514,9 @@ msgstr "Koyu"
 msgid "Light"
 msgstr "Açık"
 
+msgid "Also used for the settings menu on the tablet"
+msgstr "Tabletteki ayar menüsü için de kullanılır"
+
 msgid "Highlight colour"
 msgstr "Vurgu rengi"
 
@@ -480,6 +534,12 @@ msgstr "Çizerken soluklaş"
 
 msgid "Almost hidden while the pen is on the screen"
 msgstr "Kalem ekrandayken neredeyse gizlenir"
+
+msgid "Hide at the edge"
+msgstr "Kenarda gizle"
+
+msgid "Only a thin strip stays visible. Hold the pen above it, or tap it, and the toolbar slides out"
+msgstr "Sadece ince bir şerit görünür kalır. Kalemi üzerinde (dokunmadan) tut ya da şeride dokun, çubuk kayarak açılır"
 
 msgid "Shortcuts are sent for your keyboard layout. Pick an app preset, or set your own shortcut on any button."
 msgstr "Kısayollar klavye düzenine göre gönderilir. Bir uygulama hazır ayarı seç ya da herhangi bir düğmeye kendi kısayolunu ata."

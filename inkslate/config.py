@@ -44,6 +44,9 @@ DEFAULTS = {
     "tablet": {
         "curve": {"in_min": 0.0, "in_max": 1.0, "gamma": 1.0},
         "smoothing": 0.0,
+        # a pen tap stays a click: the position is held until the tip moves more than `radius`
+        # CSS px or `ms` pass (the tip slips a little when it presses the glass)
+        "tap": {"enabled": True, "radius": 8, "ms": 300},
         "eraser": False,
         "palm": {"enabled": True, "ms": 500},
         "gestures": {"enabled": True, "two": "undo", "three": "redo"},
@@ -56,6 +59,7 @@ DEFAULTS = {
             "accent": "",          # "" follows the desktop's accent color
             "labels": False,
             "fade": True,          # almost hide the bar while the pen is drawing
+            "autohide": False,     # wait at the edge as a thin strip; a hovering pen or a tap brings it out
             "buttons": [{"action": "undo"}, {"action": "redo"}, {"action": "eraser"}],
         },
         "screen": {

@@ -34,13 +34,19 @@ Xournal++, Rnote, Blender, OpenBoard, MyPaint, Pinta…
   (`BTN_TOOL_RUBBER`).
 - **Right-click and middle-drag strokes**: tap the button and the next pen stroke is a right click
   (context menus) or a middle-button drag (panning in Blender, Inkscape and others).
+- **Pen taps are clicks.** The tip slips a little when it presses the glass, more so when the pen
+  is tilted, and a tap on a button turns into a tiny drag. Inkslate holds the position still until
+  the tip really moves (adjustable tolerance), so buttons and menus on the desktop just work.
 - **Smoothing** for shaky lines, **palm rejection**, **finger gestures** (two-finger tap undoes,
   three-finger tap redoes) while finger drawing stays off.
 
 **Make it yours**
 - **Toolbar on the tablet**: left, right, top or bottom; button size, opacity, dark or light style,
   highlight colour (follows your desktop's accent colour by default), labels, and it fades while
-  you draw. Up to 10 buttons. The window shows a live preview at the tablet's real proportions.
+  you draw. It can also hide at the edge as a thin strip and slide out when the pen hovers over it.
+  Up to 10 buttons. The window shows a live preview at the tablet's real proportions.
+- **A cleaner settings menu on the tablet.** Weylus' own menu gets switches, sliders and cards in
+  the toolbar's style, shorter labels in your language, and pen settings first.
 - **Any shortcut on any button**: undo, redo, save, copy, paste, zoom, brush size, pan (holds
   Space), or record your own combination; a key can also be held for as long as the button is.
 - **App presets** (Generic, Krita, GIMP, Inkscape, Xournal++, Rnote) set what the standard buttons
