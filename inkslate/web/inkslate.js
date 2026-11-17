@@ -53,7 +53,6 @@
         },
         screen: { background: "#000000", show_area: true },
         area: { display: FULL, aspect: 0 },
-        strings: {},
         wake_lock: true,
         fullscreen_on_tap: false,
         hide_menu: true,
@@ -69,7 +68,6 @@
         lastPenSeen: -1e9,
         domEvent: null,               // the DOM event Weylus is currently turning into a message
         rejectedTouches: new Set(),
-        rejectedTail: new Set(),      // rejected touches whose trailing out/leave events are pending
         forwardedTouches: new Map(),  // pointer_id -> last PointerEvent sent to Weylus
         smooth: null,
         tap: null,                    // pen-down point while a tap is held steady
@@ -165,19 +163,35 @@
         };
     }
 
+    // Weylus reports errors with alert(), which freezes the page, pen included, until someone
+    // taps OK. Show them without blocking and tell the PC.
+    window.alert = (msg) => {
+        console.warn("weylus:", msg);
+        toast(String(msg), 6000);
+        sendControl({ type: "weylus_error", message: String(msg) });
+    };
+
     const weylusOnEvent = PointerHandler.prototype.onEvent;
     PointerHandler.prototype.onEvent = function (event, event_type) {
         hookSocket(this.webSocket);
+        // A tap on the screen closes Weylus' menu, also when the tap itself is not forwarded.
+        if (event_type === "pointerdown" && settings && settings.visible)
+            settings.toggle();
         if (!admitPointer(this, event, event_type))
             return;
+        // Weylus closes its menu on every pointer event over the screen, a hovering pen included
+        // (CE also when the pen leaves the screen for the menu). Only the tap above closes it.
+        const keepMenu = settings && settings.visible;
+        if (keepMenu)
+            settings.visible = false;
         state.domEvent = event;
         try {
             weylusOnEvent.call(this, event, event_type);
         } finally {
             state.domEvent = null;
+            if (keepMenu)
+                settings.visible = true;
         }
-        if (event_type === "pointerdown" && settings && settings.visible)
-            settings.toggle();
     };
 
     // Rewrite PointerEvent messages on their way out; everything else passes unchanged.
@@ -212,7 +226,7 @@
     // ---------------------------------------------------------------- pointer pipeline
 
     const ENDS = ["pointerup", "pointercancel"];
-    const TAIL = ["pointerout", "pointerleave"];
+    const HOVER = ["pointerover", "pointerenter", "pointerout", "pointerleave"];
 
     // Decides whether Weylus gets to see a DOM pointer event at all.
     function admitPointer(handler, event, type) {
@@ -228,6 +242,11 @@
         }
         if (pt !== "touch")
             return true;
+        // Weylus CE also sends over/enter/out/leave. A finger has no hover: these only come right
+        // before pointerdown and after pointerup, and CE starts a touch contact on "over", before
+        // palm rejection has seen the touch go down. Weylus 0.11 never sends them.
+        if (HOVER.includes(type))
+            return false;
         const forwarding = handler.pointerTypes.includes("touch");
         if (!forwarding) {
             if (cfg.gestures.enabled)
@@ -236,19 +255,9 @@
         }
         const id = event.pointerId;
         if (state.rejectedTouches.has(id)) {
-            if (ENDS.includes(type)) {
+            if (ENDS.includes(type))
                 state.rejectedTouches.delete(id);
-                state.rejectedTail.add(id);
-            }
             return false;
-        }
-        if (state.rejectedTail.has(id)) {
-            if (TAIL.includes(type)) {
-                if (type === "pointerleave")
-                    state.rejectedTail.delete(id);
-                return false;
-            }
-            state.rejectedTail.delete(id);
         }
         if (cfg.palm.enabled && type === "pointerdown" && now - state.lastPenSeen < cfg.palm.ms) {
             state.rejectedTouches.add(id);
@@ -264,7 +273,7 @@
             event.target.getBoundingClientRect() : null;
         const aspect = rect && rect.height > 0 ? rect.width / rect.height : window.innerWidth / window.innerHeight;
         if (type === "touch") {
-            // Touches Weylus has seen go down (newer Weylus also sends over/enter/out/leave).
+            // Touches Weylus has seen go down.
             const t = pe.event_type;
             if (ENDS.includes(t))
                 state.forwardedTouches.delete(pe.pointer_id);
@@ -597,92 +606,95 @@
   font: 15px system-ui, sans-serif; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 #inkslate-toast.show { opacity: 1; }
 
-/* ---- Weylus' settings menu, restyled ---- */
-#settings.ink-menu { --ink-accent: #3584e4; --ink-panel: rgba(28, 28, 30, 0.9); --ink-fg: #f2f2f7;
-  --ink-dim: rgba(235, 235, 245, 0.6); --ink-card: rgba(255, 255, 255, 0.06); --ink-sep: rgba(255, 255, 255, 0.08);
-  --ink-field: rgba(255, 255, 255, 0.09); --ink-off: rgba(120, 120, 128, 0.36); --ink-btn: rgba(255, 255, 255, 0.1);
-  --ink-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-  position: fixed !important; top: 12px; right: 12px; bottom: auto; left: auto; z-index: 60;
-  width: min(330px, calc(100vw - 80px)); max-height: calc(100% - 24px); box-sizing: border-box;
-  display: flex !important; flex-direction: column; padding: 0 !important; border-radius: 20px;
-  background: var(--ink-panel) !important; color: var(--ink-fg) !important; box-shadow: var(--ink-shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
-  font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; opacity: 1 !important;
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) !important; }
-#settings.ink-menu.light { --ink-panel: rgba(250, 250, 252, 0.94); --ink-fg: #1c1c1e; --ink-dim: rgba(60, 60, 67, 0.6);
-  --ink-card: rgba(0, 0, 0, 0.04); --ink-sep: rgba(0, 0, 0, 0.08); --ink-field: rgba(0, 0, 0, 0.06);
-  --ink-off: rgba(120, 120, 128, 0.24); --ink-btn: rgba(0, 0, 0, 0.07); --ink-shadow: 0 12px 40px rgba(0, 0, 0, 0.18); }
-#settings.ink-menu.lefty { left: 12px; right: auto; }
-#settings.ink-menu.hide, #settings.ink-menu.vanish { transform: translateX(calc(100% + 12px)); }
-#settings.ink-menu.hide.lefty, #settings.ink-menu.vanish.lefty { transform: translateX(calc(-100% - 12px)); }
-#settings.ink-menu #handle { position: absolute; top: 0; left: -44px; right: auto; width: 32px; height: 40px;
-  padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 0;
-  background: var(--ink-panel) !important; color: var(--ink-fg) !important; box-shadow: var(--ink-shadow);
-  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); transition: opacity 0.3s; }
-#settings.ink-menu.hide #handle { opacity: 0.55; }
-#settings.ink-menu.lefty #handle { left: auto; right: -44px; }
-#settings.ink-menu #handle svg { width: 20px; height: 20px; }
+/* ---- Weylus' settings menu: a drawer docked to the screen edge ---- */
+#settings.ink-menu { --ink-accent: #3584e4; --ink-bg: #1d1d1f; --ink-fg: #ebebeb; --ink-dim: #8e8e93;
+  --ink-line: rgba(255, 255, 255, 0.08); --ink-edge: rgba(255, 255, 255, 0.16); --ink-field: rgba(255, 255, 255, 0.04);
+  --ink-off: rgba(255, 255, 255, 0.3); --ink-mono: ui-monospace, "SF Mono", "Roboto Mono", "DejaVu Sans Mono", monospace;
+  position: fixed !important; top: 0; bottom: 0; right: 0; left: auto; z-index: 60; height: 100%;
+  width: min(312px, calc(100vw - 48px)); box-sizing: border-box; display: flex !important; flex-direction: column;
+  padding: 0 !important; border-radius: 0; border-left: 1px solid var(--ink-edge);
+  background: var(--ink-bg) !important; color: var(--ink-fg) !important; box-shadow: -6px 0 18px rgba(0, 0, 0, 0.22);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; opacity: 1 !important;
+  transition: transform 0.26s cubic-bezier(0.3, 0.7, 0.2, 1) !important; }
+#settings.ink-menu.light { --ink-bg: #f7f7f5; --ink-fg: #1f1f1f; --ink-dim: #6e6e73; --ink-line: rgba(0, 0, 0, 0.07);
+  --ink-edge: rgba(0, 0, 0, 0.15); --ink-field: rgba(0, 0, 0, 0.03); --ink-off: rgba(0, 0, 0, 0.3); }
+#settings.ink-menu.lefty { left: 0; right: auto; border-left: none; border-right: 1px solid var(--ink-edge);
+  box-shadow: 6px 0 18px rgba(0, 0, 0, 0.22); }
+#settings.ink-menu.hide, #settings.ink-menu.vanish { transform: translateX(100%); box-shadow: none; }
+#settings.ink-menu.hide.lefty, #settings.ink-menu.vanish.lefty { transform: translateX(-100%); }
+#settings.ink-menu #handle { position: absolute; top: 14px; left: -31px; right: auto; width: 30px; height: 46px;
+  padding: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 0;
+  border: 1px solid var(--ink-edge); border-right: none; border-radius: 8px 0 0 8px;
+  background: var(--ink-bg) !important; color: var(--ink-dim) !important; }
+#settings.ink-menu.lefty #handle { left: auto; right: -31px; border-right: 1px solid var(--ink-edge); border-left: none;
+  border-radius: 0 8px 8px 0; }
+#settings.ink-menu #handle svg { width: 18px; height: 18px; transition: transform 0.26s; }
+#settings.ink-menu.hide #handle svg, #settings.ink-menu.lefty:not(.hide) #handle svg { transform: rotate(180deg); }
 #settings.ink-menu #settings_scroll { box-sizing: border-box; height: auto !important; flex: 1 1 auto;
-  overflow-y: auto; padding: 18px 16px 12px; overscroll-behavior: contain; scrollbar-width: thin; }
-#settings.ink-menu h2 { font-size: 20px; font-weight: 700; text-align: left; margin: 0 4px 12px; letter-spacing: -0.01em; }
-#settings.ink-menu h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--ink-dim); text-align: left; margin: 16px 8px 6px; }
-#settings.ink-menu section { background: var(--ink-card); border-radius: 14px; padding: 2px 14px; margin: 0 0 10px; }
+  overflow-y: auto; padding: 0 18px 14px; overscroll-behavior: contain; scrollbar-width: thin; }
+#settings.ink-menu h2 { font-size: 16px; font-weight: 600; text-align: left; margin: 0 -18px 4px; padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--ink-line); }
+#settings.ink-menu h3 { display: flex; align-items: center; gap: 10px; margin: 16px 0 2px; font-size: 12px;
+  font-weight: 600; color: var(--ink-dim); text-align: left; text-transform: none; letter-spacing: 0.02em; }
+#settings.ink-menu h3::after { content: ""; flex: 1; height: 1px; background: var(--ink-line); }
+#settings.ink-menu section { background: none; border: none; border-radius: 0; padding: 0; margin: 0; }
 #settings.ink-menu section label { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 46px; margin: 0; padding: 8px 0; box-sizing: border-box; border-bottom: 1px solid var(--ink-sep); }
-#settings.ink-menu section > :last-child { border-bottom: none; }
+  min-height: 40px; margin: 0; padding: 4px 0; box-sizing: border-box; border: none; }
 #settings.ink-menu .hide { display: none !important; }
 #settings.ink-menu br { display: none; }
 #settings.ink-menu label:has(> input[type=checkbox]) { flex-direction: row-reverse; }
 #settings.ink-menu label > span, #settings.ink-menu .ink-text { flex: 1 1 auto; }
 #settings.ink-menu label input:disabled + span { color: var(--ink-dim); }
-#settings.ink-menu input[type=checkbox] { -webkit-appearance: none; appearance: none; flex: none; width: 46px;
-  height: 28px; margin: 0; border-radius: 14px; background: var(--ink-off); position: relative;
-  transition: background 0.2s; cursor: pointer; }
-#settings.ink-menu input[type=checkbox]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 22px;
-  height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); transition: transform 0.2s; }
-#settings.ink-menu input[type=checkbox]:checked { background: var(--ink-accent); }
-#settings.ink-menu input[type=checkbox]:checked::before { transform: translateX(18px); }
-#settings.ink-menu input[type=checkbox]:disabled { opacity: 0.4; }
-#settings.ink-menu label:has(input[type=range]) { flex-wrap: wrap; row-gap: 2px; }
-#settings.ink-menu label:has(input[type=range]) output { order: 1; margin-left: auto; color: var(--ink-dim);
-  font-variant-numeric: tabular-nums; }
+#settings.ink-menu input[type=checkbox] { -webkit-appearance: none; appearance: none; flex: none; position: relative;
+  width: 38px; height: 22px; margin: 0; box-sizing: border-box; border: 1.5px solid var(--ink-off); border-radius: 6px;
+  background: transparent; transition: background 0.15s, border-color 0.15s; cursor: pointer; }
+#settings.ink-menu input[type=checkbox]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 13px;
+  height: 13px; border-radius: 3px; background: var(--ink-off); transition: transform 0.15s, background 0.15s; }
+#settings.ink-menu input[type=checkbox]:checked { background: var(--ink-accent); border-color: var(--ink-accent); }
+#settings.ink-menu input[type=checkbox]:checked::before { transform: translateX(16px); background: #fff; }
+#settings.ink-menu input[type=checkbox]:disabled { opacity: 0.35; }
+#settings.ink-menu label:has(input[type=range]) { flex-wrap: wrap; row-gap: 0; padding-top: 8px; }
 #settings.ink-menu label:has(input[type=range]) .ink-text { flex: 1 1 0; min-width: 0; }
-#settings.ink-menu #displayoptions #leftylabel { flex-direction: row; gap: 6px; }
-#settings.ink-menu #displayoptions #leftylabel .ink-text { flex: none; }
-#settings.ink-menu .ink-unit { order: 2; flex: none; color: var(--ink-dim); margin-left: -8px; }
+#settings.ink-menu label:has(input[type=range]) output { order: 1; margin-left: auto; color: var(--ink-dim);
+  font: 12px var(--ink-mono); }
+#settings.ink-menu .ink-unit { order: 2; flex: none; margin-left: -9px; color: var(--ink-dim); font: 12px var(--ink-mono); }
 #settings.ink-menu input[type=range] { order: 3; flex: 1 1 100%; width: 100%; height: 28px; margin: 0;
   -webkit-appearance: none; appearance: none; background: transparent; }
-#settings.ink-menu input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px;
+#settings.ink-menu input[type=range]::-webkit-slider-runnable-track { height: 2px; border-radius: 1px;
   background: linear-gradient(to right, var(--ink-accent) var(--p, 0%), var(--ink-off) var(--p, 0%)); }
-#settings.ink-menu input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px;
-  margin-top: -8px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
-#settings.ink-menu input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--ink-off); }
-#settings.ink-menu input[type=range]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--ink-accent); }
-#settings.ink-menu input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%;
-  background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+#settings.ink-menu input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 6px; height: 20px;
+  margin-top: -9px; border: none; border-radius: 3px; background: var(--ink-fg); box-shadow: 0 0 0 3px var(--ink-bg); }
+#settings.ink-menu input[type=range]::-moz-range-track { height: 2px; background: var(--ink-off); }
+#settings.ink-menu input[type=range]::-moz-range-progress { height: 2px; background: var(--ink-accent); }
+#settings.ink-menu input[type=range]::-moz-range-thumb { width: 6px; height: 20px; border: none; border-radius: 3px;
+  background: var(--ink-fg); }
 #settings.ink-menu select, #settings.ink-menu input[type=text] { -webkit-appearance: none; appearance: none;
-  width: 100%; box-sizing: border-box; min-height: 40px; margin: 4px 0; padding: 8px 12px; border: none;
-  border-radius: 10px; background-color: var(--ink-field); color: inherit; font: inherit; }
-#settings.ink-menu select { padding-right: 34px; background-repeat: no-repeat; background-position: right 12px center;
-  background-size: 14px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
-#settings.ink-menu select option { background: #2c2c2e; color: #f2f2f7; }
-#settings.ink-menu.light select option { background: #fff; color: #1c1c1e; }
-#settings.ink-menu button { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-height: 40px;
-  margin: 8px 0; padding: 8px 14px; border: none; border-radius: 10px; background: var(--ink-btn); color: inherit;
-  font: inherit; font-weight: 600; }
-#settings.ink-menu button:active { filter: brightness(1.3); }
-#settings.ink-menu label[for=window] { min-height: 0; padding: 10px 0 2px; border: none; font-size: 13px; color: var(--ink-dim); }
-#settings.ink-menu label:has(input[type=text]) { flex-direction: column; align-items: stretch; gap: 2px; }
+  width: 100%; box-sizing: border-box; min-height: 36px; margin: 4px 0; padding: 6px 10px; border: 1px solid var(--ink-edge);
+  border-radius: 6px; background-color: var(--ink-field); color: inherit; font: inherit; }
+#settings.ink-menu select { padding-right: 30px; background-repeat: no-repeat; background-position: right 10px center;
+  background-size: 12px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+#settings.ink-menu select option { background: #2a2a2c; color: #ebebeb; }
+#settings.ink-menu.light select option { background: #fff; color: #1f1f1f; }
+#settings.ink-menu button { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-height: 36px;
+  margin: 6px 0; padding: 6px 12px; border: 1px solid var(--ink-edge); border-radius: 6px; background: transparent;
+  color: inherit; font: inherit; font-weight: 500; }
+#settings.ink-menu button:active, #settings.ink-menu #displayoptions label:active { background: var(--ink-field);
+  border-color: var(--ink-accent); }
+#settings.ink-menu label[for=window] { min-height: 0; padding: 10px 0 0; font-size: 12px; color: var(--ink-dim); }
+#settings.ink-menu label:has(input[type=text]) { flex-direction: column; align-items: stretch; gap: 0; }
 #settings.ink-menu label:has(input[type=text]) > span:last-child { font-size: 12px; color: var(--ink-dim); }
-#settings.ink-menu #displayoptions { display: flex; gap: 8px; background: none; padding: 0; }
-#settings.ink-menu #displayoptions label { flex: 1; justify-content: center; min-height: 40px; padding: 8px 10px;
-  border: none; border-radius: 10px; background: var(--ink-btn); font-weight: 600; text-align: center; }
-#settings.ink-menu #stats_section, #settings.ink-menu #log_section { background: none; padding: 0 8px; }
-#settings.ink-menu #stats_section label { min-height: 0; padding: 2px 0; border: none; font-size: 12px;
-  color: var(--ink-dim); justify-content: flex-start; gap: 6px; }
+#settings.ink-menu #displayoptions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--ink-line); }
+#settings.ink-menu #displayoptions label { flex: 1; justify-content: center; min-height: 36px; padding: 6px 8px;
+  border: 1px solid var(--ink-edge); border-radius: 6px; font-weight: 500; text-align: center; }
+#settings.ink-menu #displayoptions #leftylabel { flex-direction: row; gap: 6px; }
+#settings.ink-menu #displayoptions #leftylabel .ink-text { flex: none; }
+#settings.ink-menu #stats_section label { min-height: 0; padding: 10px 0 0; flex-direction: row-reverse;
+  justify-content: flex-end; gap: 5px;
+  font: 11px var(--ink-mono); color: var(--ink-dim); }
 #settings.ink-menu #stats_section label > span { flex: none; }
-#settings.ink-menu #log { max-width: 100%; font-size: 11px; }
+#settings.ink-menu #stats_section output { font: inherit; }
+#settings.ink-menu #log { max-width: 100%; font: 11px var(--ink-mono); }
 `;
         document.head.appendChild(style);
     }
@@ -928,7 +940,7 @@
         bar.classList.remove("faded");
     }
 
-    function toast(text) {
+    function toast(text, ms) {
         let el = document.getElementById("inkslate-toast");
         if (!el) {
             el = document.createElement("div");
@@ -938,16 +950,25 @@
         el.textContent = text;
         el.classList.add("show");
         clearTimeout(el._timer);
-        el._timer = setTimeout(() => el.classList.remove("show"), 1800);
+        el._timer = setTimeout(() => el.classList.remove("show"), ms || 1800);
     }
 
 
     // ---------------------------------------------------------------- Weylus' settings menu
 
-    const MENU_ICON = '<path d="M4 7h9"/><path d="M19 7h1"/><circle cx="16" cy="7" r="2.5"/>' +
-        '<path d="M4 17h1"/><path d="M11 17h9"/><circle cx="8" cy="17" r="2.5"/>';
+    const MENU_ICON = '<path d="M9.5 6l6 6-6 6"/>';
 
-    // Plain text inside the menu's labels becomes spans, so it can be styled and translated.
+    // Shorter labels for Weylus' menu, by element id.
+    const LABELS = {
+        enable_stylus: "Pen", enable_touch: "Finger input", enable_mouse: "Mouse", uinput_support: "uinput",
+        min_pressure: "Minimum pressure", enable_video: "Video", energysaving: "Energy saving",
+        stretch: "Fill the screen", capture_cursor: "Show the cursor in the video", aggressive_seeking: "Low latency",
+        scale_video: "Maximum resolution", frame_update_limit: "Frame interval", frame_rate: "Frame rate",
+        refresh: "Refresh the list", fullscreen: "Fullscreen", custom_input_areas: "Custom input area",
+        enable_custom_input_areas: "Use the custom input area", enable_debug_overlay: "Debug overlay",
+    };
+
+    // Plain text inside the menu's labels becomes spans, so it can be styled and replaced.
     // The structure Weylus relies on (ids, input -> output sibling) stays as it is.
     function wrapLabelText(label) {
         let afterControl = false;
@@ -963,7 +984,14 @@
         }
     }
 
-    // Input (pen, touch) first: it matters most for a pen tablet. The captured screen goes with video.
+    function heading(text) {
+        const h = document.createElement("h3");
+        h.textContent = text;
+        return h;
+    }
+
+    // Input (pen, touch) first: it matters most for a pen tablet. The captured screen goes with
+    // the video settings, the device name gets a heading of its own.
     function reorderMenu() {
         const heads = Array.from(document.querySelectorAll("#settings_scroll > h3"));
         const videoHead = heads.find((h) => h.nextElementSibling && h.nextElementSibling.querySelector("#enable_video"));
@@ -971,12 +999,17 @@
         if (!videoHead || !inputHead)
             return;
         const videoSection = videoHead.nextElementSibling;
-        const inputSection = inputHead.nextElementSibling;
-        videoHead.before(inputHead, inputSection);
+        videoHead.before(inputHead, inputHead.nextElementSibling);
+        inputHead.textContent = "Input";
+        videoHead.textContent = "Video";
         const select = document.getElementById("window");
         const capture = select && select.closest("section");
         if (capture && capture !== videoSection)
             videoSection.after(capture);
+        const client = document.getElementById("client_name");
+        const clientSection = client && client.closest("section");
+        if (clientSection)
+            clientSection.before(heading("This device"));
     }
 
     function rangeFill(r) {
@@ -985,55 +1018,44 @@
         r.style.setProperty("--p", Math.max(0, Math.min(100, p)) + "%");
     }
 
+    function refreshRanges() {
+        for (const r of document.querySelectorAll("#settings input[type=range]"))
+            rangeFill(r);
+    }
+
     function setText(el, text) {
         if (el && text)
             el.textContent = text;
     }
 
-    // Shorter, translated labels (the PC sends them in the user's language).
-    function localizeMenu(S) {
-        setText(document.querySelector("#settings h2"), S.title);
-        for (const h of document.querySelectorAll("#settings_scroll > h3")) {
-            const sec = h.nextElementSibling;
-            if (sec && sec.querySelector("#enable_stylus"))
-                setText(h, S.input);
-            else if (sec && sec.querySelector("#enable_video"))
-                setText(h, S.video);
-        }
-        for (const id of ["enable_video", "energysaving", "stretch", "capture_cursor", "aggressive_seeking",
-            "enable_mouse", "enable_stylus", "enable_touch", "uinput_support", "enable_custom_input_areas",
-            "enable_debug_overlay"]) {
-            const input = document.getElementById(id);
-            if (input && input.parentElement)
-                setText(input.parentElement.querySelector("span"), S[id]);
-        }
-        const rangeLabel = (id, text) => {
-            const input = document.getElementById(id);
-            const label = input && input.closest("label");
-            setText(label && label.querySelector(".ink-text"), text);
-        };
-        rangeLabel("scale_video", S.scale_video);
-        rangeLabel("frame_update_limit", S.frame_interval);
-        rangeLabel("frame_rate", S.frame_rate);
-        rangeLabel("min_pressure", S.min_pressure);
-        setText(document.querySelector('#settings label[for="window"]'), S.capture);
-        setText(document.getElementById("refresh"), S.refresh);
-        setText(document.getElementById("fullscreen"), S.fullscreen);
-        setText(document.getElementById("custom_input_areas"), S.custom_input_areas);
-        for (const [id, key] of [["leftylabel", "lefty"], ["vanish", "vanish"]]) {
+    function relabelMenu() {
+        setText(document.querySelector("#settings h2"), "Weylus settings");
+        for (const [id, text] of Object.entries(LABELS)) {
             const el = document.getElementById(id);
-            setText(el && el.querySelector(".ink-text"), S[key]);
+            if (!el)
+                continue;
+            if (el.tagName === "BUTTON")
+                setText(el, text);
+            else if (el.type === "range")
+                setText(el.closest("label") && el.closest("label").querySelector(".ink-text"), text);
+            else if (el.parentElement)
+                setText(el.parentElement.querySelector("span"), text);
         }
+        setText(document.querySelector('#settings label[for="window"]'), "Captured screen");
+        const lefty = document.getElementById("leftylabel");
+        setText(lefty && lefty.querySelector(".ink-text"), "Swap side");
+        const vanish = document.getElementById("vanish");
+        setText(vanish && vanish.querySelector(".ink-text"), "Hide until reload");
         const client = document.getElementById("client_name");
         const clientLabel = client && client.closest("label");
         if (clientLabel) {
             const spans = clientLabel.querySelectorAll("span");
-            setText(spans[0], S.client_name);
+            setText(spans[0], "Name");
             if (spans.length > 1)
-                setText(spans[spans.length - 1], S.client_name_hint);
+                setText(spans[spans.length - 1], "Optional, tells several tablets apart");
         }
         const fps = document.getElementById("fps");
-        setText(fps && fps.closest("label") && fps.closest("label").querySelector("span"), S.fps);
+        setText(fps && fps.closest("label") && fps.closest("label").querySelector("span"), "fps");
     }
 
     function styleMenu() {
@@ -1048,17 +1070,16 @@
                 for (const label of menu.querySelectorAll("label"))
                     wrapLabelText(label);
                 reorderMenu();
+                relabelMenu();
                 for (const r of menu.querySelectorAll("input[type=range]")) {
                     r.addEventListener("input", () => rangeFill(r));
                     r.addEventListener("change", () => rangeFill(r));
                 }
                 menu.classList.add("ink-menu");
             }
-            for (const r of menu.querySelectorAll("input[type=range]"))
-                rangeFill(r);
+            refreshRanges();
             menu.classList.toggle("light", cfg.toolbar.theme === "light");
             menu.style.setProperty("--ink-accent", cfg.toolbar.accent || "#3584e4");
-            localizeMenu(cfg.strings || {});
         } catch (err) {
             console.warn("inkslate: menu styling failed", err);
         }

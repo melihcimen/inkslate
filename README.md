@@ -45,8 +45,10 @@ Xournal++, Rnote, Blender, OpenBoard, MyPaint, Pinta…
   highlight colour (follows your desktop's accent colour by default), labels, and it fades while
   you draw. It can also hide at the edge as a thin strip and slide out when the pen hovers over it.
   Up to 10 buttons. The window shows a live preview at the tablet's real proportions.
-- **A cleaner settings menu on the tablet.** Weylus' own menu gets switches, sliders and cards in
-  the toolbar's style, shorter labels in your language, and pen settings first.
+- **A tidier settings menu on the tablet.** Weylus' own menu becomes a drawer on the screen edge
+  with compact switches and sliders in the toolbar's colours, shorter labels and the input settings
+  first. It no longer closes when the pen merely hovers over the screen, and Weylus' error pop-ups
+  no longer freeze the page.
 - **Any shortcut on any button**: undo, redo, save, copy, paste, zoom, brush size, pan (holds
   Space), or record your own combination; a key can also be held for as long as the button is.
 - **App presets** (Generic, Krita, GIMP, Inkscape, Xournal++, Rnote) set what the standard buttons
@@ -112,7 +114,7 @@ see [Weylus' instructions](https://github.com/H-M-H/Weylus#linux) (a `uinput` gr
 rule, once). On Debian/Ubuntu the dependencies are:
 
 ```sh
-sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-soup-3.0 adb gettext
+sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-soup-3.0 adb
 ```
 
 ### Tablet setup for USB (Android, once)
@@ -167,8 +169,11 @@ To use a specific Weylus, set `weylus_path` in `~/.config/inkslate/config.json` 
   produce a garbled picture.
 - **Dimming**: if you unplug the cable while energy saving dimmed the tablet, the brightness is
   restored the next time you plug it in.
-- Weylus Community Edition support is new; reports are welcome. Tested mostly with a Samsung Galaxy
-  Tab S7 FE on Ubuntu (GNOME, Wayland).
+- **Weylus Community Edition**: the end-to-end tests pass against the 2026.5.22 binary and the
+  Flatpak. The Flatpak normally gets no X11 under Wayland, and then Weylus has nothing to capture
+  and creates no pen device; Inkslate starts it with X11 access (`--socket=x11`) so this works
+  without screen-sharing prompts. Tested mostly with a Samsung Galaxy Tab S7 FE on Ubuntu (GNOME,
+  Wayland).
 
 ## Related projects
 
@@ -196,10 +201,10 @@ mode Weylus requires the access code and the control channel checks it too.
 
 ```sh
 python3 -m inkslate                     # run from the checkout
-msgfmt -o inkslate/locale/tr/LC_MESSAGES/inkslate.mo po/tr.po   # translations for local runs
 python3 tests/unit_test.py              # shortcuts, screen areas, QR codes (no Weylus needed)
 python3 tests/usb_test.py               # USB handling against a fake adb, no tablet needed
 python3 tests/e2e_test.py               # end-to-end test (Weylus + headless Chrome + evtest --grab)
+python3 tests/e2e_test.py --weylus flatpak   # the same against Weylus Community Edition
 python3 tests/screenshots.py OUTDIR     # render every page of the window
 ```
 
@@ -210,8 +215,6 @@ characters), right-click strokes, gestures, palm rejection. The devices are grab
 nothing reaches your desktop; it needs passwordless `sudo evtest`.
 
 Logs are written to `~/.local/state/inkslate/inkslate.log` (Inkslate) and `weylus.log` (Weylus).
-
-Translations live in `po/` (`xgettext` → `msgmerge`). Turkish is included.
 
 ## License
 

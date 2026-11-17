@@ -39,7 +39,6 @@ from gi.repository import Adw, Gtk, Soup
 assert (Adw.MAJOR_VERSION, Adw.MINOR_VERSION) >= (1, 5), "libadwaita >= 1.5 needed"
 EOF
 command -v adb >/dev/null || missing+=(adb)
-command -v msgfmt >/dev/null || missing+=(gettext)
 if ((${#missing[@]})); then
     warn "Missing packages: ${missing[*]}"
     echo "    Debian/Ubuntu: sudo apt install ${missing[*]}"
@@ -83,11 +82,6 @@ rm -rf "${SHARE}/inkslate"
 mkdir -p "${SHARE}"
 cp -r "${SRC}/inkslate" "${SHARE}/inkslate"
 find "${SHARE}/inkslate" -name '__pycache__' -prune -exec rm -rf {} +
-for po in "${SRC}"/po/*.po; do
-    lang="$(basename "$po" .po)"
-    mkdir -p "${SHARE}/inkslate/locale/${lang}/LC_MESSAGES"
-    msgfmt -o "${SHARE}/inkslate/locale/${lang}/LC_MESSAGES/inkslate.mo" "$po"
-done
 install -Dm755 "${SRC}/bin/inkslate" "${PREFIX}/bin/inkslate"
 # the launcher looks for the package in ../share/inkslate relative to itself
 install -Dm644 "${SRC}/data/${APP_ID}.desktop" "${PREFIX}/share/applications/${APP_ID}.desktop"

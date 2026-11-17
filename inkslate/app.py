@@ -19,7 +19,6 @@ from . import keys as keymod  # noqa: E402
 from . import payload  # noqa: E402
 from .config import STATE_DIR, Config  # noqa: E402
 from .control import ControlServer  # noqa: E402
-from .i18n import _  # noqa: E402
 from .usb import UsbManager  # noqa: E402
 from .weylus import WeylusProcess, describe, find_weylus  # noqa: E402
 
@@ -43,21 +42,21 @@ class InkslateApp(Adw.Application):
         super().__init__(application_id=os.environ.get("INKSLATE_APP_ID", APP_ID),
                          flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.add_main_option("background", ord("b"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-                             _("Start without opening the window"), None)
+                             "Start without opening the window", None)
         self.add_main_option("quit", ord("q"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-                             _("Stop the running instance"), None)
+                             "Stop the running instance", None)
         self.add_main_option("version", 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-                             _("Print the version"), None)
+                             "Print the version", None)
         self.add_main_option("status", 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-                             _("Print the state of the running instance"), None)
+                             "Print the state of the running instance", None)
         self.add_main_option("set", ord("s"), GLib.OptionFlags.NONE, GLib.OptionArg.STRING_ARRAY,
-                             _("Change a setting of the running instance, e.g. tablet.eraser=true"),
+                             "Change a setting of the running instance, e.g. tablet.eraser=true",
                              "PATH=JSON")
         self.add_main_option("native", ord("n"), GLib.OptionFlags.NONE, GLib.OptionArg.STRING_ARRAY,
-                             _("Change a Weylus setting on the tablet page, e.g. energysaving=true"),
+                             "Change a Weylus setting on the tablet page, e.g. energysaving=true",
                              "KEY=JSON")
         self.add_main_option("action", ord("a"), GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
-                             _("Run a tablet action: open-page, fullscreen, reload, undo, redo, eraser"),
+                             "Run a tablet action: open-page, fullscreen, reload, undo, redo, eraser",
                              "ACTION")
         self.window = None
         self.config = None
@@ -79,6 +78,7 @@ class InkslateApp(Adw.Application):
             "hello": self._on_hello,
             "state": self._on_tablet_state,
             "pressure": self._on_pressure,
+            "weylus_error": self._on_weylus_error,
             "closed": self._on_tablet_closed,
         })
         self.usb = UsbManager(self.config, self._on_usb_status, self._on_usb_event)
@@ -110,7 +110,7 @@ class InkslateApp(Adw.Application):
         try:
             self.control.start()
         except GLib.Error as e:
-            self.weylus_message = _("Control port {port} is busy: {err}").format(
+            self.weylus_message = "Control port {port} is busy: {err}".format(
                 port=self.config["control_port"], err=e.message)
         self.weylus.start()
         self.usb.start()
@@ -213,8 +213,8 @@ class InkslateApp(Adw.Application):
     def _on_close_request(self, _win):
         if not self._hid_once:
             self._hid_once = True
-            n = Gio.Notification.new(_("Inkslate is still running"))
-            n.set_body(_("The tablet keeps working. Use “Quit” in the menu to stop it."))
+            n = Gio.Notification.new("Inkslate is still running")
+            n.set_body("The tablet keeps working. Use “Quit” in the menu to stop it.")
             self.send_notification("background", n)
         return False  # hide_on_close hides it
 
@@ -368,7 +368,7 @@ class InkslateApp(Adw.Application):
             AUTOSTART_FILE.parent.mkdir(parents=True, exist_ok=True)
             AUTOSTART_FILE.write_text(
                 "[Desktop Entry]\nType=Application\nName=Inkslate\n"
-                f"Comment={_('Tablet pen input in the background')}\n"
+                f"Comment={'Tablet pen input in the background'}\n"
                 f"Exec={launcher_command()} --background\n"
                 f"Icon={APP_ID}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n")
         else:
@@ -388,8 +388,8 @@ class InkslateApp(Adw.Application):
         self.weylus_message = message
         log.info("weylus %s %s", "running" if running else "stopped", message)
         if message == "crashed":
-            n = Gio.Notification.new(_("Weylus keeps stopping"))
-            n.set_body(_("Another Weylus may be using the same ports. See the log in Inkslate."))
+            n = Gio.Notification.new("Weylus keeps stopping")
+            n.set_body("Another Weylus may be using the same ports. See the log in Inkslate.")
             self.send_notification("weylus", n)
         self._refresh_status()
 
@@ -419,6 +419,12 @@ class InkslateApp(Adw.Application):
         if self.window and self._monitor:
             self.window.push_pressure(msg)
 
+    def _on_weylus_error(self, client, msg):
+        text = str(msg.get("message", ""))[:300]
+        log.warning("Weylus reported on the tablet: %s", text)
+        if self.window:
+            self.window.toast("Weylus: " + text)
+
     def _on_tablet_closed(self, client):
         self._apply_dimming()
         if self.window:
@@ -444,11 +450,11 @@ class InkslateApp(Adw.Application):
             if self.usb.dimmed() and not self.client():
                 self.usb.request("undim")   # left dimmed by an unplug in energy saving
             if not (self.window and self.window.is_active()):
-                n = Gio.Notification.new(_("Tablet connected"))
-                n.set_body(_("Opening the page on the tablet."))
+                n = Gio.Notification.new("Tablet connected")
+                n.set_body("Opening the page on the tablet.")
                 self.send_notification("tablet", n)
         elif name == "fullscreen" and not info.get("ok"):
-            self._toast(_("Could not switch to fullscreen: {reason}").format(reason=info.get("reason")))
+            self._toast("Could not switch to fullscreen: {reason}".format(reason=info.get("reason")))
         self._refresh_status()
 
     def _show_about(self):
@@ -456,14 +462,14 @@ class InkslateApp(Adw.Application):
             application_name="Inkslate",
             application_icon=APP_ID,
             version=__version__,
-            developer_name=_("Inkslate contributors"),
+            developer_name="Inkslate contributors",
             license_type=Gtk.License.AGPL_3_0,
             website="https://github.com/melihcimen/inkslate",
             issue_url="https://github.com/melihcimen/inkslate/issues",
-            comments=_("Use an Android tablet or iPad as a pen tablet for your Linux PC, "
+            comments=("Use an Android tablet or iPad as a pen tablet for your Linux PC, "
                        "with any drawing app. Built on Weylus by H-M-H."),
         )
-        about.add_credit_section(_("Built on"), [
+        about.add_credit_section("Built on", [
             "Weylus https://github.com/H-M-H/Weylus",
             "Weylus Community Edition https://github.com/electronstudio/WeylusCommunityEdition"])
         about.present(self.window)

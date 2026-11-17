@@ -6,7 +6,7 @@ page in headless Chrome with synthetic pen/touch/mouse events through the DevToo
 checks what Weylus emits on its uinput devices. The devices are read with `evtest --grab`, so no
 test event reaches the desktop (needs passwordless sudo for evtest).
 
-Run from the repository root:  python3 tests/e2e_test.py
+Run from the repository root:  python3 tests/e2e_test.py [--weylus PATH|flatpak]
 """
 
 import json
@@ -27,6 +27,7 @@ from inkslate import APP_ID, cdp  # noqa: E402
 
 WEB, WS, CTRL, DEVTOOLS = 1811, 9111, 9112, 9333
 W, H = 1280, 800
+WEYLUS = sys.argv[sys.argv.index("--weylus") + 1] if "--weylus" in sys.argv else ""
 results = []
 
 
@@ -140,7 +141,7 @@ def main():
     (tmp / "config" / "inkslate").mkdir(parents=True)
     (tmp / "config" / "inkslate" / "config.json").write_text(json.dumps({
         "web_port": WEB, "websocket_port": WS, "control_port": CTRL,
-        "usb": {"enabled": False}, "profile": "rnote"}))
+        "usb": {"enabled": False}, "profile": "rnote", "weylus_path": WEYLUS}))
 
     before = set(weylus_devices())
     app = subprocess.Popen([sys.executable, "-m", "inkslate", "--background"], cwd=ROOT, env=env,
@@ -248,7 +249,7 @@ def main():
         page.mouse_click(*pos["eraser"])
         time.sleep(0.3)
         check("toolbar taps don't reach Weylus as pen/mouse input",
-              "ABS_X" not in stylus.text() and "EV_" not in mouse.text().replace("EV_SYN", ""), mouse.text()[:120])
+              "ABS_X" not in stylus.text() and not re.search(r"EV_(KEY|REL|ABS)", mouse.text()), mouse.text()[:120])
 
         inkslate(env, "--set", "profile=xournalpp")
         wait_for(lambda: page.js("inkslate.config().keys.redo.code") == "KeyY", timeout=5)
@@ -325,11 +326,15 @@ def main():
         inkslate(env, "--set", 'tablet.screen.background="#000000"')
         inkslate(env, "--native", "energysaving=false")
 
-        # ---- frame rate in FPS works on Weylus 0.11 (which stores a frame interval)
+        # ---- frame rate in FPS works on both (Weylus 0.11 stores a frame interval in ms)
         inkslate(env, "--native", "frame_rate=30")
         time.sleep(0.6)
-        ms = page.js("frame_update_scale(settings.frame_update_limit_input.valueAsNumber)")
-        check("frame_rate=30 sets a ~33 ms frame interval", ms is not None and abs(ms - 33.3) < 3, str(ms))
+        if page.js("typeof frame_update_scale === 'function'"):
+            ms = page.js("frame_update_scale(settings.frame_update_limit_input.valueAsNumber)")
+            check("frame_rate=30 sets a ~33 ms frame interval", ms is not None and abs(ms - 33.3) < 3, str(ms))
+        else:
+            fps = page.js("frame_rate_scale(settings.frame_rate_input.valueAsNumber)")
+            check("frame_rate=30 sets 30 fps", fps is not None and abs(fps - 30) < 2, str(fps))
 
         # ---- screen area: right half of the screens, then keep proportions
         rect = json.loads(page.js("JSON.stringify(document.getElementById('canvas').getBoundingClientRect())"))
@@ -493,7 +498,7 @@ def main():
         time.sleep(0.4)
         check("steady tap: strokes still draw", len(set(events(stylus.text(), "ABS_X"))) >= 4)
 
-        # ---- Weylus' menu, restyled and translated
+        # ---- Weylus' menu, restyled
         check("Weylus menu is restyled", page.js("document.getElementById('settings').classList.contains('ink-menu')"))
         check("menu labels are replaced", page.js(
             "document.getElementById('energysaving').parentElement.querySelector('span').textContent") == "Energy saving")
@@ -507,7 +512,18 @@ def main():
         check("menu switches still work", page.js("settings.checks.get('enable_touch').checked") == (not before),
               f"{sw}")
         inkslate(env, "--native", f"enable_touch={'true' if before else 'false'}")
+        for x in (sw["x"] - 40, 500, 300):
+            page.pen("move", x, 400, buttons=0)
+        time.sleep(0.3)
+        check("a pen hovering over the screen leaves the menu open", page.js("settings.visible") is True)
+        page.pen("down", 300, 400, 0.3)
+        page.pen("up", 300, 400)
+        time.sleep(0.3)
+        check("a tap on the screen closes the menu", page.js("settings.visible") is False)
         page.js("settings.visible && settings.toggle()")
+        page.js("alert('Test error'), 1")
+        check("Weylus errors don't block the page",
+              page.js("document.getElementById('inkslate-toast').textContent") == "Test error")
         js_errors = page.js("document.getElementById('log').textContent")
         check("still no errors in the Weylus page log", not js_errors.strip(), js_errors.strip()[:200])
 

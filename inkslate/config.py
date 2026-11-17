@@ -17,7 +17,6 @@ CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "in
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 DEFAULTS = {
-    "language": "",                # "" = system language, or "en" / "tr"
     "mode": "usb",                 # "usb": localhost + adb reverse, "wifi": LAN with access code
     "access_code": "",
     "weylus_path": "",             # a path, "flatpak" (Community Edition), or empty: PATH,
@@ -78,6 +77,9 @@ DEFAULTS = {
 }
 
 
+OBSOLETE = ("language",)   # settings that no longer exist
+
+
 def _merge(base, over):
     out = copy.deepcopy(base)
     for k, v in (over or {}).items():
@@ -105,6 +107,8 @@ class Config:
             self.data["access_code"] = secrets.token_urlsafe(6)
         if self.data["profile"] not in PROFILES:
             self.data["profile"] = "generic"
+        for key in OBSOLETE:
+            self.data.pop(key, None)
 
     def save(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)

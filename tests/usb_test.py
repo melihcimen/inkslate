@@ -115,8 +115,11 @@ def wait_for(pred, timeout=10):
         ctx = loop.get_context()
         while ctx.pending():
             ctx.iteration(False)
-        if pred():
-            return True
+        try:
+            if pred():
+                return True
+        except ValueError:      # the fake adb was writing its state file just then
+            pass
         time.sleep(0.05)
     return False
 

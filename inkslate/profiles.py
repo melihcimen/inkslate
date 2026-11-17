@@ -4,7 +4,6 @@ Shortcuts are layout-independent keyval combos (see keys.py), resolved to physic
 desktop's keyboard layout right before they are sent to the tablet page.
 """
 
-from .i18n import _
 from .keys import combo
 
 # Action kinds decide how a toolbar button behaves on the tablet:
@@ -63,7 +62,7 @@ PROFILES = {
 
 def profile_name(profile_id):
     name = PROFILES[profile_id]["name"]
-    return name if name else _("Generic")
+    return name if name else "Generic"
 
 
 def profile_keys(profile_id):
@@ -75,46 +74,46 @@ def profile_keys(profile_id):
 
 def action_name(action):
     return {
-        "undo": _("Undo"),
-        "redo": _("Redo"),
-        "save": _("Save"),
-        "copy": _("Copy"),
-        "paste": _("Paste"),
-        "zoom_in": _("Zoom in"),
-        "zoom_out": _("Zoom out"),
-        "brush_bigger": _("Bigger brush"),
-        "brush_smaller": _("Smaller brush"),
-        "pan": _("Pan (hold Space)"),
-        "eraser": _("Eraser"),
-        "right_click": _("Right click"),
-        "middle_drag": _("Middle-button drag"),
-        "touch": _("Toggle finger input"),
-        "fullscreen": _("Fullscreen"),
-        "custom": _("Custom shortcut"),
-        "custom_hold": _("Custom key, held"),
-        "none": _("Nothing"),
+        "undo": "Undo",
+        "redo": "Redo",
+        "save": "Save",
+        "copy": "Copy",
+        "paste": "Paste",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "brush_bigger": "Bigger brush",
+        "brush_smaller": "Smaller brush",
+        "pan": "Pan (hold Space)",
+        "eraser": "Eraser",
+        "right_click": "Right click",
+        "middle_drag": "Middle-button drag",
+        "touch": "Toggle finger input",
+        "fullscreen": "Fullscreen",
+        "custom": "Custom shortcut",
+        "custom_hold": "Custom key, held",
+        "none": "Nothing",
     }[action]
 
 
 def action_short(action):
     """Label under the icon on the tablet toolbar, where space is tight."""
     short = {
-        "zoom_in": _("Zoom +"),
-        "zoom_out": _("Zoom −"),
-        "brush_bigger": _("Brush +"),
-        "brush_smaller": _("Brush −"),
-        "pan": _("Pan"),
-        "middle_drag": _("Middle"),
-        "touch": _("Touch"),
+        "zoom_in": "Zoom +",
+        "zoom_out": "Zoom −",
+        "brush_bigger": "Brush +",
+        "brush_smaller": "Brush −",
+        "pan": "Pan",
+        "middle_drag": "Middle",
+        "touch": "Touch",
     }
     return short.get(action) or action_name(action)
 
 
 def action_hint(action):
     return {
-        "eraser": _("Tap: on/off · hold: only while held"),
-        "right_click": _("Tap: next pen tap is a right click · hold: while held"),
-        "middle_drag": _("Tap: next pen stroke drags with the middle button · hold: while held"),
-        "pan": _("Hold the button and drag with the pen"),
-        "custom_hold": _("The key stays down while the button is held"),
+        "eraser": "Tap: on/off · hold: only while held",
+        "right_click": "Tap: next pen tap is a right click · hold: while held",
+        "middle_drag": "Tap: next pen stroke drags with the middle button · hold: while held",
+        "pan": "Hold the button and drag with the pen",
+        "custom_hold": "The key stays down while the button is held",
     }.get(action, "")

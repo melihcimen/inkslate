@@ -49,7 +49,11 @@ def find_weylus(configured=""):
 
 def flatpak_command():
     # The sandbox can't read our files; expose just the cache dir with the patched lib.js.
-    return ["flatpak", "run", f"--filesystem={CACHE_DIR}:ro", "--command=weylus", FLATPAK_ID]
+    # The Flatpak only gets X11 when there is no Wayland ("fallback-x11"); without X11 and
+    # without PipeWire capture Weylus has nothing to capture and refuses to create its input
+    # devices, so ask for X11 (XWayland) explicitly.
+    return ["flatpak", "run", f"--filesystem={CACHE_DIR}:ro", "--nosocket=fallback-x11", "--socket=x11",
+            "--command=weylus", FLATPAK_ID]
 
 
 def describe(cmd):

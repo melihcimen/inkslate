@@ -102,6 +102,8 @@ class ControlServer:
             self._call("state", client)
         elif kind == "pressure":
             self._call("pressure", client, msg)
+        elif kind == "weylus_error":
+            self._call("weylus_error", client, msg)
 
     def _on_closed(self, conn, client):
         if client in self.clients:

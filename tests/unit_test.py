@@ -85,7 +85,6 @@ a = payload.area({"monitor": "gone", "region": {"x": 0.9, "y": 0, "w": 0.5, "h":
 check("unknown monitor falls back to all; region clamped inside",
       abs(a["display"]["x"] + a["display"]["w"] - 1) < 1e-5, str(a))
 
-check("menu labels travel with the payload", bool(t["strings"]["energysaving"] and t["strings"]["title"]))
 check("steady taps are on by default", t["tap"]["enabled"] and t["tap"]["radius"] > 0
       and not t["toolbar"]["autohide"])
 

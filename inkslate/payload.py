@@ -7,7 +7,6 @@ kind, icon and title, and the screen area is turned into coordinates Weylus unde
 import copy
 
 from . import keys as keymod
-from .i18n import _
 from .profiles import ACTIONS, action_name, action_short, profile_keys
 
 FULL = {"x": 0.0, "y": 0.0, "w": 1.0, "h": 1.0}
@@ -42,41 +41,8 @@ def build(config, resolve=keymod.resolve, monitors=(), default_accent="#3584e4")
     t["toolbar"]["buttons"] = buttons
     t["toolbar"]["accent"] = t["toolbar"].get("accent") or default_accent
     t["area"] = area(t["area"], monitors)
-    t["strings"] = menu_strings()
     return t
 
-
-def menu_strings():
-    """Labels for Weylus' settings menu on the tablet, shorter and in the user's language."""
-    return {
-        "title": _("Tablet settings"),
-        "input": _("Input"),
-        "video": _("Video"),
-        "enable_stylus": _("Pen"),
-        "enable_touch": _("Finger input"),
-        "enable_mouse": _("Mouse"),
-        "uinput_support": _("uinput"),
-        "min_pressure": _("Minimum pressure"),
-        "enable_video": _("Video"),
-        "energysaving": _("Energy saving"),
-        "stretch": _("Fill the screen"),
-        "capture_cursor": _("Show the cursor in the video"),
-        "aggressive_seeking": _("Low latency"),
-        "scale_video": _("Maximum video resolution"),
-        "frame_interval": _("Frame interval"),
-        "frame_rate": _("Frame rate"),
-        "capture": _("Captured screen"),
-        "refresh": _("Refresh the list"),
-        "fullscreen": _("Fullscreen"),
-        "client_name": _("Device name"),
-        "client_name_hint": _("Optional, to tell several tablets apart"),
-        "lefty": _("Swap side"),
-        "vanish": _("Hide until reload"),
-        "fps": _("Frames per second:"),
-        "custom_input_areas": _("Custom input area"),
-        "enable_custom_input_areas": _("Use the custom input area"),
-        "enable_debug_overlay": _("Debug overlay"),
-    }
 
 
 def monitor_rect(monitors, connector):
