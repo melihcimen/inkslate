@@ -16,6 +16,9 @@ msgstr "Çalışan örneği durdur"
 msgid "Print the version"
 msgstr "Sürümü yazdır"
 
+msgid "Print the state of the running instance"
+msgstr "Çalışan örneğin durumunu yazdır"
+
 msgid "Change a setting of the running instance, e.g. tablet.eraser=true"
 msgstr "Çalışan örneğin bir ayarını değiştir, örn. tablet.eraser=true"
 
@@ -226,6 +229,9 @@ msgstr "Basınç eğrisi"
 msgid "Draw on the tablet to see the pressure live. The vertical line marks your hardest press."
 msgstr "Basıncı canlı görmek için tablette çiz. Dikey çizgi en sert baskını gösterir."
 
+msgid "Reset curve"
+msgstr "Eğriyi sıfırla"
+
 msgid "pen pressure"
 msgstr "kalem basıncı"
 
@@ -252,9 +258,6 @@ msgstr "Eğri"
 
 msgid "Below 1: soft (light strokes get thicker), above 1: firm"
 msgstr "1'in altı: yumuşak (hafif çizgiler kalınlaşır), 1'in üstü: sert"
-
-msgid "Reset curve"
-msgstr "Eğriyi sıfırla"
 
 msgid "The pen acts as an eraser tip (also on the tablet toolbar)"
 msgstr "Kalem silgi ucu gibi davranır (tablet çubuğunda da var)"
@@ -366,6 +369,12 @@ msgstr "İlk dokunuşta tam ekran"
 
 msgid "For Wi-Fi, where automatic fullscreen isn't possible"
 msgstr "Otomatik tam ekranın mümkün olmadığı Wi-Fi için"
+
+msgid "Start with the Weylus menu closed"
+msgstr "Weylus menüsü kapalı başlasın"
+
+msgid "It can still be opened with the ⠿ handle on the tablet"
+msgstr "Tabletteki ⠿ tutamağıyla yine açılabilir"
 
 msgid "Only matters if you want to see the PC screen on the tablet. Changing these restarts Weylus."
 msgstr "Yalnızca bilgisayar ekranını tablette görmek istiyorsan önemlidir. Değiştirmek Weylus'u yeniden başlatır."

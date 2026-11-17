@@ -117,3 +117,8 @@ class Connection:
 def list_pages(port, timeout=3.0):
     with urlopen(f"http://127.0.0.1:{port}/json", timeout=timeout) as r:
         return [p for p in json.load(r) if p.get("type") == "page" and "webSocketDebuggerUrl" in p]
+
+
+def close_page(port, page_id, timeout=3.0):
+    with urlopen(f"http://127.0.0.1:{port}/json/close/{page_id}", timeout=timeout) as r:
+        r.read()

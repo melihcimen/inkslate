@@ -2,11 +2,14 @@
 
 import copy
 import json
+import logging
 import os
 import secrets
 from pathlib import Path
 
 from .profiles import PROFILES
+
+log = logging.getLogger("inkslate")
 
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "inkslate"
 STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "inkslate"
@@ -47,6 +50,7 @@ DEFAULTS = {
         },
         "wake_lock": True,
         "fullscreen_on_tap": False,
+        "hide_menu": True,
     },
 }
 
@@ -73,7 +77,7 @@ class Config:
         except FileNotFoundError:
             pass
         except (OSError, ValueError) as e:
-            print(f"inkslate: could not read {self.path}: {e}; using defaults")
+            log.warning("could not read %s: %s; using defaults", self.path, e)
         if not self.data["access_code"]:
             self.data["access_code"] = secrets.token_urlsafe(6)
         if self.data["profile"] not in PROFILES:

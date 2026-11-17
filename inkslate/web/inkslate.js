@@ -38,6 +38,7 @@
         },
         wake_lock: true,
         fullscreen_on_tap: false,
+        hide_menu: true,
     };
 
     const LABELS = {
@@ -625,6 +626,16 @@
 
     // ---------------------------------------------------------------- startup
 
+    // Everything in the Weylus menu can be changed from the PC, so start with it closed.
+    // Only once per page load: if the user opens it with the handle, it stays open.
+    function hideMenuOnce() {
+        if (state.menuHandled)
+            return;
+        state.menuHandled = true;
+        if (cfg.hide_menu && settings.visible)
+            settings.toggle();
+    }
+
     function start() {
         if (state.started || !settings)
             return;
@@ -645,6 +656,7 @@
                 document.body.requestFullscreen({ navigationUI: "hide" }).catch(() => { });
         }, true);
         updateWakeLock();
+        hideMenuOnce();   // uses the last config the PC sent (kept in localStorage)
         watchWeylusConnection();
         connectControl();
         window.inkslate = { version: VERSION, config: () => cfg, state, runAction };

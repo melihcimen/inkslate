@@ -171,6 +171,7 @@ def main():
         check("page loads and connects to the control channel", bool(ready))
         js_errors = page.js("document.getElementById('log').textContent")
         check("no errors in the Weylus page log", not js_errors.strip(), js_errors.strip()[:200])
+        check("Weylus menu starts closed", page.js("settings.visible === false"))
         if not ready:
             return 1
         time.sleep(1.5)  # ConfigOk -> PointerHandler

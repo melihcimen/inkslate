@@ -2,6 +2,7 @@
 fullscreen via Chrome DevTools, brightness and battery."""
 
 import json
+import logging
 import queue
 import re
 import shutil
@@ -9,10 +10,13 @@ import socket
 import subprocess
 import threading
 import time
+from urllib.request import urlopen
 
 from . import cdp
 from .config import STATE_DIR
 from .control import idle
+
+log = logging.getLogger("inkslate")
 
 BRIGHTNESS_FILE = STATE_DIR / "tablet-brightness.json"
 
@@ -86,8 +90,8 @@ class UsbManager:
         while not self._stop.is_set():
             try:
                 self._poll()
-            except Exception as e:
-                print(f"inkslate: usb poll failed: {e!r}")
+            except Exception:
+                log.exception("usb poll failed")
             deadline = time.monotonic() + self.POLL_SECONDS
             while not self._stop.is_set():
                 left = deadline - time.monotonic()
@@ -102,8 +106,8 @@ class UsbManager:
                 action, kw = item
                 try:
                     getattr(self, "_do_" + action)(**kw)
-                except Exception as e:
-                    print(f"inkslate: usb action {action} failed: {e!r}")
+                except Exception:
+                    log.exception("usb action %s failed", action)
 
     def _set_status(self, **changes):
         changed = any(self.status.get(k) != v for k, v in changes.items())
@@ -134,6 +138,7 @@ class UsbManager:
         self._set_status(state="connected", serial=serial, model=self._models[serial])
 
         if self._ensure_reverse(serial) or newly:
+            log.info("tablet %s (%s) connected, newly=%s", serial, self._models[serial], newly)
             idle(self.on_event, "connected", newly=newly)
             if self.config["mode"] == "usb" and self.config["usb"]["auto_open"]:
                 self._do_open_page()
@@ -166,19 +171,72 @@ class UsbManager:
         self._set_status(battery=int(level.group(1)) if level else None,
                          charging=bool(status and status.group(1) in ("2", "5")))
 
+    def _weylus_ready(self, timeout=30):
+        """Weylus needs several seconds to start; a page opened before that is a dead error page."""
+        url = f"http://127.0.0.1:{self.config['web_port']}/lib.js"
+        end = time.monotonic() + timeout
+        while time.monotonic() < end and not self._stop.is_set():
+            try:
+                with urlopen(url, timeout=2):
+                    return True
+            except OSError:
+                time.sleep(0.5)
+        return False
+
     def _do_open_page(self):
         serial = self.status["serial"]
         if not serial:
             return
+        if not self._weylus_ready():
+            log.warning("weylus is not answering, not opening the page")
+            return
         url = f"http://127.0.0.1:{self.config['web_port']}/"
+        log.info("opening %s on %s", url, serial)
         self._adb("shell", "input", "keyevent", "KEYCODE_WAKEUP", serial=serial)
         # application_id makes Chrome reuse the tab it opened for us instead of adding a new one.
         rc, out = self._adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url,
                             "-e", "com.android.browser.application_id", "inkslate",
                             "com.android.chrome", serial=serial)
+        log.info("am start: rc=%s %s", rc, out.replace("\n", " ")[:200])
         if rc != 0 or "Error" in out:
             self._adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url,
                       serial=serial)
+        time.sleep(3)
+        self._close_duplicate_pages()
+
+    def _close_duplicate_pages(self):
+        """Keep one tablet page: extra tabs on our address (e.g. from an older setup or a browser
+        restore) would each hold a Weylus connection and confuse which page is in use."""
+        serial = self.status["serial"]
+        port = _free_port()
+        rc, _ = self._adb("forward", f"tcp:{port}", "localabstract:chrome_devtools_remote",
+                          serial=serial)
+        if rc != 0:
+            return
+        prefix = f"http://127.0.0.1:{self.config['web_port']}/"
+        try:
+            pages = [p for p in cdp.list_pages(port)
+                     if p.get("type") == "page" and p.get("url", "").startswith(prefix)]
+            if len(pages) < 2:
+                return
+            keep = None
+            for page in pages:
+                try:
+                    with cdp.Connection(page["webSocketDebuggerUrl"], timeout=3) as c:
+                        if c.evaluate("document.visibilityState") == "visible":
+                            keep = page
+                            break
+                except (OSError, cdp.CDPError):
+                    continue
+            keep = keep or pages[0]
+            for page in pages:
+                if page is not keep:
+                    cdp.close_page(port, page["id"])
+            log.info("closed %d duplicate tablet page(s)", len(pages) - 1)
+        except OSError as e:
+            log.warning("could not check for duplicate pages: %s", e)
+        finally:
+            self._adb("forward", "--remove", f"tcp:{port}", serial=serial)
 
     def _do_fullscreen(self, attempts=8):
         serial = self.status["serial"]
@@ -207,6 +265,7 @@ class UsbManager:
                             result = str(e)
                             continue
                         if result == "ok":
+                            log.info("page switched to fullscreen")
                             idle(self.on_event, "fullscreen", ok=True)
                             return
                 except OSError as e:
@@ -214,6 +273,7 @@ class UsbManager:
                 time.sleep(1)
         finally:
             self._adb("forward", "--remove", f"tcp:{port}", serial=serial)
+        log.warning("fullscreen failed: %s", result)
         idle(self.on_event, "fullscreen", ok=False, reason=result)
 
     def _do_dim(self, level):

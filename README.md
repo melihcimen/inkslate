@@ -7,7 +7,8 @@ well: turning the tablet's browser into a pen, touch and video client. Inkslate 
 make it pleasant to use every day:
 
 - **Plug in and draw.** When the cable goes in, Inkslate forwards the ports over adb, wakes the
-  tablet, opens the page in Chrome and switches it to fullscreen. No URLs to type, no taps.
+  tablet, opens the page in Chrome and switches it to fullscreen (as soon as the tablet is unlocked).
+  No URLs to type, no taps, no leftover duplicate tabs, and the Weylus menu starts closed.
 - **Control everything from the PC.** All settings of the Weylus menu on the tablet (pen, touch,
   energy saving, video, frame rate, resolution, captured screen…) are mirrored in a GTK window and
   apply live.
@@ -89,6 +90,7 @@ inkslate --set tablet.curve.in_max=0.6
 inkslate --set profile=xournalpp
 inkslate --native energysaving=true          # a setting of the Weylus menu on the tablet
 inkslate --action undo                       # undo, redo, eraser, reload, open-page, fullscreen
+inkslate --status                            # JSON: Weylus, tablet, battery, connected pages
 inkslate --background                        # start without the window
 inkslate --quit
 ```
@@ -125,6 +127,7 @@ encrypted, so use Wi-Fi mode on networks you trust.
 python3 -m inkslate                     # run from the checkout
 msgfmt -o inkslate/locale/tr/LC_MESSAGES/inkslate.mo po/tr.po   # translations for local runs
 python3 tests/e2e_test.py               # end-to-end test (headless Chrome + evtest --grab)
+python3 tests/usb_test.py               # USB handling against a fake adb, no tablet needed
 python3 tests/screenshots.py OUTDIR     # render every page of the window
 ```
 
@@ -132,6 +135,8 @@ The end-to-end test starts its own instance on spare ports, drives the tablet pa
 Chrome with synthetic pen/touch events and checks what Weylus emits on its uinput devices. The
 devices are grabbed exclusively, so nothing reaches your desktop; it needs passwordless
 `sudo evtest`.
+
+Logs are written to `~/.local/state/inkslate/inkslate.log` (Inkslate) and `weylus.log` (Weylus).
 
 Translations live in `po/` (`xgettext` → `msgmerge`). Turkish is included.
 

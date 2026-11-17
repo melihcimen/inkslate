@@ -1,6 +1,8 @@
 """Application: owns the config, the Weylus process, the control channel and the USB manager."""
 
 import json
+import logging
+import logging.handlers
 import os
 import socket
 import sys
@@ -13,13 +15,24 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from . import APP_ID, __version__  # noqa: E402
-from .config import Config  # noqa: E402
+from .config import STATE_DIR, Config  # noqa: E402
 from .control import ControlServer  # noqa: E402
 from .i18n import _  # noqa: E402
 from .usb import UsbManager  # noqa: E402
 from .weylus import WeylusProcess, find_weylus  # noqa: E402
 
 AUTOSTART_FILE = Path(GLib.get_user_config_dir()) / "autostart" / f"{APP_ID}.desktop"
+log = logging.getLogger("inkslate")
+
+
+def setup_logging():
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    handler = logging.handlers.RotatingFileHandler(STATE_DIR / "inkslate.log", maxBytes=512 * 1024,
+                                                   backupCount=1)
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    log.addHandler(handler)
+    log.addHandler(logging.StreamHandler())
+    log.setLevel(logging.INFO)
 
 
 class InkslateApp(Adw.Application):
@@ -33,6 +46,8 @@ class InkslateApp(Adw.Application):
                              _("Stop the running instance"), None)
         self.add_main_option("version", 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
                              _("Print the version"), None)
+        self.add_main_option("status", 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+                             _("Print the state of the running instance"), None)
         self.add_main_option("set", ord("s"), GLib.OptionFlags.NONE, GLib.OptionArg.STRING_ARRAY,
                              _("Change a setting of the running instance, e.g. tablet.eraser=true"),
                              "PATH=JSON")
@@ -52,6 +67,8 @@ class InkslateApp(Adw.Application):
 
     def do_startup(self):
         Adw.Application.do_startup(self)
+        setup_logging()
+        log.info("Inkslate %s starting", __version__)
         self.config = Config()
         self.config.save()   # writes a generated access code / new defaults back
         self.weylus = WeylusProcess(self.config, self._on_weylus_state)
@@ -91,6 +108,9 @@ class InkslateApp(Adw.Application):
         if opts.get("quit"):
             self.quit()
             return 0
+        if opts.get("status"):
+            command_line.print_literal(json.dumps(self.status_report(), indent=2, ensure_ascii=False) + "\n")
+            return 0
         scripted = False
         for item in opts.get("set") or []:
             scripted = True
@@ -118,6 +138,21 @@ class InkslateApp(Adw.Application):
         if not opts.get("background") and not scripted:
             self.activate()
         return 0
+
+    def status_report(self):
+        client = self.client()
+        return {
+            "version": __version__,
+            "mode": self.config["mode"],
+            "weylus": {"running": self.weylus.running, "message": self.weylus_message,
+                       "path": self.weylus_path()},
+            "usb": self.usb.status,
+            "pages": [{"remote": c.remote, "version": c.hello.get("version"),
+                       "fullscreen": c.state.get("fullscreen"), "visible": c.state.get("visible"),
+                       "energysaving": (c.state.get("native") or {}).get("energysaving")}
+                      for c in self.control.authed_clients],
+            "active_page": bool(client),
+        }
 
     def set_config_path(self, item):
         """Apply "a.b.c=<json>" to the config. Returns an error string or None."""
@@ -272,6 +307,7 @@ class InkslateApp(Adw.Application):
 
     def _on_weylus_state(self, running, message):
         self.weylus_message = message
+        log.info("weylus %s %s", "running" if running else "stopped", message)
         if message == "crashed":
             n = Gio.Notification.new(_("Weylus keeps stopping"))
             n.set_body(_("Another Weylus may be using the same ports. See the log in Inkslate."))
@@ -279,6 +315,7 @@ class InkslateApp(Adw.Application):
         self._refresh_status()
 
     def _on_hello(self, client):
+        log.info("tablet page connected from %s (inkslate.js %s)", client.remote, client.hello.get("version"))
         self.control.send({"type": "config", "config": self.config.tablet_config()}, client)
         if self._monitor:
             self.control.send({"type": "monitor", "on": True}, client)
@@ -292,6 +329,7 @@ class InkslateApp(Adw.Application):
                 and self.usb.connected and not getattr(client, "fullscreen_requested", True)
                 and s.get("visible") and not s.get("fullscreen")):
             client.fullscreen_requested = True
+            log.info("page is not fullscreen, requesting it")
             self.usb.request("fullscreen")
         self._apply_dimming()
         if self.window:

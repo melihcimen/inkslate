@@ -442,6 +442,10 @@ class MainWindow(Adw.ApplicationWindow):
                                        subtitle=_("For Wi-Fi, where automatic fullscreen isn't possible"))
         self.sw_tap_fs.connect("notify::active", lambda r, _p: self._set_tablet("fullscreen_on_tap", r.get_active()))
         g.add(self.sw_tap_fs)
+        self.sw_hide_menu = Adw.SwitchRow(title=_("Start with the Weylus menu closed"),
+                                          subtitle=_("It can still be opened with the ⠿ handle on the tablet"))
+        self.sw_hide_menu.connect("notify::active", lambda r, _p: self._set_tablet("hide_menu", r.get_active()))
+        g.add(self.sw_hide_menu)
         page.add(g)
 
         g = Adw.PreferencesGroup(title=_("Video"),
@@ -619,6 +623,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.sw_dim.set_active(u["dim_on_energysaving"])
             self.sw_wake.set_active(t["wake_lock"])
             self.sw_tap_fs.set_active(t["fullscreen_on_tap"])
+            self.sw_hide_menu.set_active(t["hide_menu"])
             v = self.cfg["video"]
             self.sw_wayland.set_active(v["wayland_support"])
             self.sw_vaapi.set_active(v["try_vaapi"])

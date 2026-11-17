@@ -5,12 +5,15 @@ PC -> tablet: config (Inkslate settings), set_native, monitor, action, get_state
 """
 
 import json
+import logging
 from urllib.parse import urlparse
 
 import gi
 
 gi.require_version("Soup", "3.0")
 from gi.repository import GLib, Soup  # noqa: E402
+
+log = logging.getLogger("inkslate")
 
 
 class Client:
@@ -111,8 +114,8 @@ class ControlServer:
         if fn:
             try:
                 fn(*args)
-            except Exception as e:  # keep the server alive on handler bugs
-                print(f"inkslate: control handler {name} failed: {e!r}")
+            except Exception:  # keep the server alive on handler bugs
+                log.exception("control handler %s failed", name)
 
     def send(self, msg, client=None):
         text = json.dumps(msg)
@@ -121,9 +124,12 @@ class ControlServer:
                 c.conn.send_text(text)
 
 
-def idle(fn, *args):
-    """Run fn(*args) once in the GLib main loop (for worker threads)."""
+def idle(fn, *args, **kwargs):
+    """Run fn(*args, **kwargs) once in the GLib main loop (for worker threads)."""
     def _run():
-        fn(*args)
+        try:
+            fn(*args, **kwargs)
+        except Exception:
+            log.exception("main loop callback %s failed", getattr(fn, "__name__", fn))
         return False
     GLib.idle_add(_run)
