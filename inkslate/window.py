@@ -1,4 +1,4 @@
-"""Main window: status, the tablet page's Weylus settings, pen, shortcuts and connection."""
+"""Main window: status, the tablet page's Weylus settings, pen, screen area, toolbar and connection."""
 
 import gi
 
@@ -6,11 +6,22 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
+from . import keys as keymod  # noqa: E402
+from . import qr  # noqa: E402
 from .curve_widget import CurveView  # noqa: E402
 from .i18n import LANGUAGES, _  # noqa: E402
-from .profiles import ACTIONS, PROFILES, action_name, profile_name  # noqa: E402
+from .payload import FULL  # noqa: E402
+from .previews import AreaView, ToolbarPreview  # noqa: E402
+from .profiles import (ACTIONS, GESTURE_ACTIONS, MAX_BUTTONS, PROFILES, action_hint,  # noqa: E402
+                       action_name, profile_keys, profile_name)
 
-MAX_TOOLBAR_BUTTONS = 6
+REGIONS = {
+    "full": dict(FULL),
+    "left": {"x": 0.0, "y": 0.0, "w": 0.5, "h": 1.0},
+    "right": {"x": 0.5, "y": 0.0, "w": 0.5, "h": 1.0},
+    "top": {"x": 0.0, "y": 0.0, "w": 1.0, "h": 0.5},
+    "bottom": {"x": 0.0, "y": 0.5, "w": 1.0, "h": 0.5},
+}
 
 
 def _scale(lo, hi, step, digits):
@@ -40,13 +51,32 @@ def _button(label, callback, css=None, tooltip=None):
     return b
 
 
+def _icon_button(icon, callback, tooltip):
+    b = Gtk.Button(icon_name=icon, valign=Gtk.Align.CENTER, tooltip_text=tooltip)
+    b.add_css_class("flat")
+    b.connect("clicked", lambda *_a: callback())
+    return b
+
+
+def _hex(rgba):
+    return "#{:02x}{:02x}{:02x}".format(*(round(c * 255) for c in (rgba.red, rgba.green, rgba.blue)))
+
+
+def _rgba(spec):
+    c = Gdk.RGBA()
+    c.parse(spec or "#000000")
+    return c
+
+
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title="Inkslate")
         self.app = app
         self.cfg = app.config
         self._updating = False
-        self.set_default_size(920, 820)
+        self._qr_text = None
+        self.button_rows = []
+        self.set_default_size(960, 840)
         self.set_hide_on_close(True)
 
         self.toasts = Adw.ToastOverlay()
@@ -68,21 +98,19 @@ class MainWindow(Adw.ApplicationWindow):
         view.add_bottom_bar(bottom)
         view.set_content(self.stack)
 
-        self.stack.add_titled_with_icon(self._build_status(), "status", _("Status"),
-                                        "computer-symbolic")
-        self.stack.add_titled_with_icon(self._build_tablet(), "tablet", _("Tablet"),
-                                        "input-tablet-symbolic")
-        self.stack.add_titled_with_icon(self._build_pen(), "pen", _("Pen"),
-                                        "document-edit-symbolic")
-        self.stack.add_titled_with_icon(self._build_shortcuts(), "shortcuts", _("Shortcuts"),
-                                        "input-keyboard-symbolic")
-        self.stack.add_titled_with_icon(self._build_connection(), "connection", _("Connection"),
-                                        "network-wired-symbolic")
+        for builder, name, title, icon in (
+                (self._build_status, "status", _("Status"), "computer-symbolic"),
+                (self._build_tablet, "tablet", _("Tablet"), "input-tablet-symbolic"),
+                (self._build_pen, "pen", _("Pen"), "document-edit-symbolic"),
+                (self._build_area, "area", _("Area"), "view-fullscreen-symbolic"),
+                (self._build_toolbar, "toolbar", _("Buttons"), "input-keyboard-symbolic"),
+                (self._build_connection, "connection", _("Connection"), "network-wired-symbolic")):
+            self.stack.add_titled_with_icon(builder(), name, title, icon)
         self.stack.connect("notify::visible-child-name", lambda *_a: self._update_monitor())
         self.connect("notify::visible", lambda *_a: self._update_monitor())
 
         # Narrow windows: icons only, switcher moves to the bottom.
-        bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
+        bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 760sp"))
         bp.add_setter(bottom, "reveal", True)
         bp.add_setter(header, "show-title", False)
         self.add_breakpoint(bp)
@@ -133,6 +161,14 @@ class MainWindow(Adw.ApplicationWindow):
         g.add(self.row_url)
         page.add(g)
 
+        self.grp_qr = Adw.PreferencesGroup(
+            title=_("Connect over Wi-Fi"),
+            description=_("Scan with the tablet's camera. The code includes the access code."))
+        self.qr_picture = Gtk.Picture(can_shrink=False, halign=Gtk.Align.CENTER,
+                                      margin_top=6, margin_bottom=6)
+        self.grp_qr.add(self.qr_picture)
+        page.add(self.grp_qr)
+
         g = Adw.PreferencesGroup(title=_("Quick settings"))
         self.sw_quick_energy = Adw.SwitchRow(title=_("Energy saving"),
                                              subtitle=_("No video, black tablet screen; pen still works"))
@@ -181,6 +217,30 @@ class MainWindow(Adw.ApplicationWindow):
         g.add(self.row_min_pressure)
         page.add(g)
 
+        g = Adw.PreferencesGroup(title=_("Finger gestures"),
+                                 description=_("Work while finger input is off, so your hand can't draw."))
+        self.sw_gestures = Adw.SwitchRow(title=_("Gestures"))
+        self.sw_gestures.connect("notify::active", lambda r, _p: self._set_sub("gestures", "enabled", r.get_active()))
+        g.add(self.sw_gestures)
+        gesture_items = [(a, action_name(a)) for a in GESTURE_ACTIONS]
+        self.combo_two = self._string_combo(_("Two-finger tap"), gesture_items)
+        self.combo_two.connect("notify::selected", lambda r, _p: self._set_sub("gestures", "two", r.keys[r.get_selected()]))
+        g.add(self.combo_two)
+        self.combo_three = self._string_combo(_("Three-finger tap"), gesture_items)
+        self.combo_three.connect("notify::selected",
+                                 lambda r, _p: self._set_sub("gestures", "three", r.keys[r.get_selected()]))
+        g.add(self.combo_three)
+        self.sw_palm = Adw.SwitchRow(title=_("Palm rejection"),
+                                     subtitle=_("When finger input is on, a palm resting while the pen is "
+                                                "close won't draw or click"))
+        self.sw_palm.connect("notify::active", lambda r, _p: self._set_sub("palm", "enabled", r.get_active()))
+        g.add(self.sw_palm)
+        self.spin_palm = Adw.SpinRow.new_with_range(100, 3000, 50)
+        self.spin_palm.set_title(_("Pen grace period (ms)"))
+        self.spin_palm.connect("notify::value", lambda r, _p: self._set_sub("palm", "ms", int(r.get_value())))
+        g.add(self.spin_palm)
+        page.add(g)
+
         g = Adw.PreferencesGroup(title=_("Screen"))
         self._native_switch(g, "energysaving", _("Energy saving"),
                             _("No video, black screen (saves the tablet's battery)"))
@@ -190,12 +250,10 @@ class MainWindow(Adw.ApplicationWindow):
         self._native_switch(g, "aggressive_seeking", _("Low latency"),
                             _("Skip ahead instead of buffering the video"))
 
-        self.spin_interval = Adw.SpinRow.new_with_range(1, 1000, 1)
-        self.spin_interval.set_title(_("Frame interval (ms)"))
-        self.spin_interval.set_subtitle(_("16 ms ≈ 60 FPS, 33 ms ≈ 30 FPS"))
-        self.spin_interval.connect(
-            "notify::value", lambda r, _p: self._native_changed("frame_update_limit", int(r.get_value())))
-        g.add(self.spin_interval)
+        self.spin_fps = Adw.SpinRow.new_with_range(1, 120, 1)
+        self.spin_fps.set_title(_("Maximum frame rate (FPS)"))
+        self.spin_fps.connect("notify::value", lambda r, _p: self._native_changed("frame_rate", int(r.get_value())))
+        g.add(self.spin_fps)
 
         self.scale_video = _scale(0.1, 2, 0.01, 2)
         self.scale_video.connect(
@@ -302,7 +360,74 @@ class MainWindow(Adw.ApplicationWindow):
         on = self.get_visible() and self.stack.get_visible_child_name() == "pen"
         self.app.set_monitor(on)
 
-    # ================================================================== shortcuts page
+    # ================================================================== area page
+
+    def _build_area(self):
+        page = Adw.PreferencesPage()
+        g = Adw.PreferencesGroup(
+            title=_("Screen area"),
+            description=_("The part of the PC screen the tablet controls. Drag across the screens "
+                          "below to draw your own area."))
+        self.area_view = AreaView(self._area_drawn)
+        g.add(Gtk.Frame(child=self.area_view))
+        page.add(g)
+
+        g = Adw.PreferencesGroup()
+        self.monitor_list = Gtk.StringList()
+        self.monitor_keys = []
+        self.combo_monitor = Adw.ComboRow(title=_("Screen"), model=self.monitor_list)
+        self.combo_monitor.connect("notify::selected", self._monitor_changed)
+        g.add(self.combo_monitor)
+        self.combo_region = self._string_combo(_("Area"), [
+            ("full", _("Whole screen")), ("left", _("Left half")), ("right", _("Right half")),
+            ("top", _("Top half")), ("bottom", _("Bottom half")), ("custom", _("Custom (drawn above)"))])
+        self.combo_region.connect("notify::selected", self._region_changed)
+        g.add(self.combo_region)
+        self.sw_keep_aspect = Adw.SwitchRow(
+            title=_("Keep proportions"),
+            subtitle=_("Use only the part of the tablet with the same shape as the area, so "
+                       "circles stay round"))
+        self.sw_keep_aspect.connect("notify::active",
+                                    lambda r, _p: self._set_sub("area", "keep_aspect", r.get_active()))
+        g.add(self.sw_keep_aspect)
+        page.add(g)
+
+        g = Adw.PreferencesGroup(title=_("Tablet screen"),
+                                 description=_("Shown while energy saving is on."))
+        self.color_bg = Gtk.ColorDialogButton(dialog=Gtk.ColorDialog(with_alpha=False),
+                                              valign=Gtk.Align.CENTER)
+        self.color_bg.connect("notify::rgba", lambda b, _p: self._set_sub(
+            "screen", "background", _hex(b.get_rgba())))
+        row = Adw.ActionRow(title=_("Background"))
+        row.add_suffix(self.color_bg)
+        g.add(row)
+        self.sw_show_area = Adw.SwitchRow(title=_("Mark the unused part"),
+                                          subtitle=_("When proportions are kept, the rest of the tablet "
+                                                     "is shaded and does nothing"))
+        self.sw_show_area.connect("notify::active",
+                                  lambda r, _p: self._set_sub("screen", "show_area", r.get_active()))
+        g.add(self.sw_show_area)
+        page.add(g)
+        return page
+
+    def _monitor_changed(self, row, _pspec):
+        if self._updating:
+            return
+        idx = row.get_selected()
+        if 0 <= idx < len(self.monitor_keys):
+            self._set_sub("area", "monitor", self.monitor_keys[idx])
+
+    def _region_changed(self, row, _pspec):
+        if self._updating:
+            return
+        key = row.keys[row.get_selected()]
+        if key in REGIONS:
+            self._set_sub("area", "region", dict(REGIONS[key]))
+
+    def _area_drawn(self, region):
+        self._set_sub("area", "region", dict(region))
+
+    # ================================================================== toolbar page
 
     def _string_combo(self, title, items, subtitle=None):
         row = Adw.ComboRow(title=title, subtitle=subtitle or "",
@@ -310,92 +435,219 @@ class MainWindow(Adw.ApplicationWindow):
         row.keys = [k for k, _label in items]
         return row
 
-    def _build_shortcuts(self):
+    def _build_toolbar(self):
         page = Adw.PreferencesPage()
 
         g = Adw.PreferencesGroup(title=_("Tablet toolbar"),
-                                 description=_("Buttons on the edge of the tablet screen. Tap the eraser "
-                                               "to toggle it, hold it to erase only while holding."))
+                                 description=_("Buttons on the edge of the tablet screen. This is how "
+                                               "they will look."))
+        self.preview = ToolbarPreview()
+        g.add(Gtk.Frame(child=self.preview))
+        page.add(g)
+
+        g = Adw.PreferencesGroup(title=_("Look"))
         self.sw_toolbar = Adw.SwitchRow(title=_("Show the toolbar"))
-        self.sw_toolbar.connect("notify::active", lambda r, _p: self._set_toolbar("enabled", r.get_active()))
+        self.sw_toolbar.connect("notify::active", lambda r, _p: self._set_sub("toolbar", "enabled", r.get_active()))
         g.add(self.sw_toolbar)
-        self.combo_side = self._string_combo(_("Side"), [("left", _("Left")), ("right", _("Right"))])
-        self.combo_side.connect("notify::selected", lambda r, _p: self._set_toolbar(
-            "side", r.keys[r.get_selected()]))
+        self.combo_side = self._string_combo(_("Position"), [
+            ("left", _("Left")), ("right", _("Right")), ("top", _("Top")), ("bottom", _("Bottom"))])
+        self.combo_side.connect("notify::selected", lambda r, _p: self._set_sub(
+            "toolbar", "side", r.keys[r.get_selected()]))
         g.add(self.combo_side)
+        self.scale_size = _scale(36, 96, 2, 0)
+        self.scale_size.connect("value-changed", lambda s: self._set_sub("toolbar", "size", int(s.get_value())))
+        g.add(_scale_row(_("Button size"), _("In the tablet's pixels"), self.scale_size))
+        self.scale_opacity = _scale(0.2, 1, 0.05, 2)
+        self.scale_opacity.connect("value-changed",
+                                   lambda s: self._set_sub("toolbar", "opacity", round(s.get_value(), 2)))
+        g.add(_scale_row(_("Opacity"), _("While you're not touching it"), self.scale_opacity))
+        self.combo_bar_theme = self._string_combo(_("Style"), [("dark", _("Dark")), ("light", _("Light"))])
+        self.combo_bar_theme.connect("notify::selected", lambda r, _p: self._set_sub(
+            "toolbar", "theme", r.keys[r.get_selected()]))
+        g.add(self.combo_bar_theme)
+        self.color_accent = Gtk.ColorDialogButton(dialog=Gtk.ColorDialog(with_alpha=False),
+                                                  valign=Gtk.Align.CENTER)
+        self.color_accent.connect("notify::rgba", lambda b, _p: self._set_sub(
+            "toolbar", "accent", _hex(b.get_rgba())))
+        row = Adw.ActionRow(title=_("Highlight colour"), subtitle=_("For buttons that are on, like the eraser"))
+        row.add_suffix(_icon_button("edit-undo-symbolic", lambda: self._set_sub("toolbar", "accent", ""),
+                                    _("Use the desktop's accent colour")))
+        row.add_suffix(self.color_accent)
+        g.add(row)
+        self.sw_labels = Adw.SwitchRow(title=_("Show labels"))
+        self.sw_labels.connect("notify::active", lambda r, _p: self._set_sub("toolbar", "labels", r.get_active()))
+        g.add(self.sw_labels)
+        self.sw_fade = Adw.SwitchRow(title=_("Fade while drawing"),
+                                     subtitle=_("Almost hidden while the pen is on the screen"))
+        self.sw_fade.connect("notify::active", lambda r, _p: self._set_sub("toolbar", "fade", r.get_active()))
+        g.add(self.sw_fade)
+        page.add(g)
+
+        self.grp_buttons = Adw.PreferencesGroup(
+            title=_("Buttons"),
+            description=_("Shortcuts are sent for your keyboard layout. Pick an app preset, or set "
+                          "your own shortcut on any button."))
+        self.btn_add = Gtk.Button(icon_name="list-add-symbolic", valign=Gtk.Align.CENTER,
+                                  tooltip_text=_("Add a button"))
+        self.btn_add.add_css_class("flat")
+        self.btn_add.connect("clicked", lambda *_a: self._add_button())
+        self.grp_buttons.set_header_suffix(self.btn_add)
         self.combo_profile = self._string_combo(
-            _("App profile"), [(k, profile_name(k)) for k in PROFILES],
-            _("Which key combos undo, redo and save send"))
+            _("App preset"), [(k, profile_name(k)) for k in PROFILES],
+            _("Which shortcuts undo, redo, zoom and the others send"))
         self.combo_profile.connect("notify::selected", self._profile_changed)
-        g.add(self.combo_profile)
-        self.combo_buttons = []
-        action_items = [(a, action_name(a)) for a in ACTIONS]
-        for i in range(MAX_TOOLBAR_BUTTONS):
-            row = self._string_combo(_("Button {n}").format(n=i + 1), action_items)
-            row.connect("notify::selected", lambda *_a: self._buttons_changed())
-            g.add(row)
-            self.combo_buttons.append(row)
-        page.add(g)
-
-        g = Adw.PreferencesGroup(title=_("Finger gestures"),
-                                 description=_("Work while finger input is off, so your hand can't draw."))
-        self.sw_gestures = Adw.SwitchRow(title=_("Gestures"))
-        self.sw_gestures.connect("notify::active", lambda r, _p: self._set_gesture("enabled", r.get_active()))
-        g.add(self.sw_gestures)
-        gesture_items = [(a, action_name(a)) for a in ACTIONS if a != "fullscreen"]
-        self.combo_two = self._string_combo(_("Two-finger tap"), gesture_items)
-        self.combo_two.connect("notify::selected", lambda r, _p: self._set_gesture("two", r.keys[r.get_selected()]))
-        g.add(self.combo_two)
-        self.combo_three = self._string_combo(_("Three-finger tap"), gesture_items)
-        self.combo_three.connect("notify::selected",
-                                 lambda r, _p: self._set_gesture("three", r.keys[r.get_selected()]))
-        g.add(self.combo_three)
-        page.add(g)
-
-        g = Adw.PreferencesGroup(title=_("Palm rejection"))
-        self.sw_palm = Adw.SwitchRow(title=_("Ignore touches near the pen"),
-                                     subtitle=_("When finger input is on, a palm resting while the pen is "
-                                                "close won't draw or click"))
-        self.sw_palm.connect("notify::active", lambda r, _p: self._set_palm("enabled", r.get_active()))
-        g.add(self.sw_palm)
-        self.spin_palm = Adw.SpinRow.new_with_range(100, 3000, 50)
-        self.spin_palm.set_title(_("Pen grace period (ms)"))
-        self.spin_palm.connect("notify::value", lambda r, _p: self._set_palm("ms", int(r.get_value())))
-        g.add(self.spin_palm)
-        page.add(g)
+        self.grp_buttons.add(self.combo_profile)
+        page.add(self.grp_buttons)
         return page
+
+    def _button_actions(self):
+        return [a for a in ACTIONS if a != "none"]
+
+    def _rebuild_button_rows(self):
+        for row in self.button_rows:
+            self.grp_buttons.remove(row)
+        self.button_rows = []
+        buttons = self.cfg["tablet"]["toolbar"]["buttons"]
+        actions = self._button_actions()
+        prof = profile_keys(self.cfg["profile"])
+        was = self._updating
+        self._updating = True
+        try:
+            for i, b in enumerate(buttons):
+                action = b.get("action", "undo")
+                row = Adw.ComboRow(title=_("Button {n}").format(n=i + 1),
+                                   model=Gtk.StringList.new([action_name(a) for a in actions]))
+                row.keys = actions
+                if action in actions:
+                    row.set_selected(actions.index(action))
+                if action in ("custom", "custom_hold"):
+                    spec = b.get("keys")
+                    rec = Gtk.Button(label=keymod.label(spec) if spec else _("Set shortcut…"),
+                                     valign=Gtk.Align.CENTER, tooltip_text=_("Record a shortcut"))
+                    rec.connect("clicked", lambda *_a, i=i: self._record_shortcut(i))
+                    row.add_suffix(rec)
+                    row.set_subtitle(action_hint(action))
+                else:
+                    spec = prof.get(action) if ACTIONS.get(action) in ("key", "hold") else None
+                    shortcut = keymod.label(spec) if spec else ""
+                    row.set_subtitle(" · ".join(x for x in (shortcut, action_hint(action)) if x))
+                up = _icon_button("go-up-symbolic", lambda i=i: self._move_button(i, -1), _("Move up"))
+                up.set_sensitive(i > 0)
+                down = _icon_button("go-down-symbolic", lambda i=i: self._move_button(i, 1), _("Move down"))
+                down.set_sensitive(i < len(buttons) - 1)
+                rm = _icon_button("user-trash-symbolic", lambda i=i: self._remove_button(i), _("Remove"))
+                for w in (up, down, rm):
+                    row.add_suffix(w)
+                row.connect("notify::selected", lambda r, _p, i=i: self._button_action_changed(i, r))
+                self.grp_buttons.add(row)
+                self.button_rows.append(row)
+        finally:
+            self._updating = was
+        self.btn_add.set_sensitive(len(buttons) < MAX_BUTTONS)
+
+    def _buttons_changed(self):
+        self.app.tablet_config_changed()
+        # Rebuilding inside the row's own signal handler would destroy it mid-emission.
+        GLib.idle_add(self._after_buttons_changed)
+
+    def _after_buttons_changed(self):
+        self._rebuild_button_rows()
+        self._update_previews()
+        return False
+
+    def _button_action_changed(self, index, row):
+        if self._updating:
+            return
+        buttons = self.cfg["tablet"]["toolbar"]["buttons"]
+        action = row.keys[row.get_selected()]
+        new = {"action": action}
+        if action in ("custom", "custom_hold") and buttons[index].get("keys"):
+            new["keys"] = buttons[index]["keys"]
+        buttons[index] = new
+        self._buttons_changed()
+        if action in ("custom", "custom_hold") and "keys" not in new:
+            GLib.idle_add(lambda: self._record_shortcut(index) and False)
+
+    def _add_button(self):
+        buttons = self.cfg["tablet"]["toolbar"]["buttons"]
+        if len(buttons) >= MAX_BUTTONS:
+            return
+        used = {b.get("action") for b in buttons}
+        nxt = next((a for a in ("undo", "redo", "eraser", "pan", "zoom_in", "zoom_out", "save")
+                    if a not in used), "custom")
+        buttons.append({"action": nxt})
+        self._buttons_changed()
+
+    def _move_button(self, index, delta):
+        buttons = self.cfg["tablet"]["toolbar"]["buttons"]
+        j = index + delta
+        if 0 <= j < len(buttons):
+            buttons[index], buttons[j] = buttons[j], buttons[index]
+            self._buttons_changed()
+
+    def _remove_button(self, index):
+        buttons = self.cfg["tablet"]["toolbar"]["buttons"]
+        if 0 <= index < len(buttons):
+            del buttons[index]
+            self._buttons_changed()
+
+    def _record_shortcut(self, index):
+        dialog = Adw.AlertDialog(heading=_("Press the shortcut"),
+                                 body=_("Press the key combination this button should send, "
+                                        "for example Ctrl+B. For a button that holds a key, a "
+                                        "single Ctrl, Shift or Alt also works. Escape cancels."))
+        dialog.add_response("cancel", _("Cancel"))
+        ctrl = Gtk.EventControllerKey()
+        ctrl.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        lone = {"keyval": None}     # a modifier pressed with nothing else (so far)
+
+        def store(spec):
+            buttons = self.cfg["tablet"]["toolbar"]["buttons"]
+            if 0 <= index < len(buttons):
+                buttons[index]["keys"] = spec
+                if buttons[index].get("action") not in ("custom", "custom_hold"):
+                    buttons[index]["action"] = "custom"
+                self._buttons_changed()
+            dialog.close()
+
+        def pressed(_c, keyval, _keycode, state):
+            if keyval == Gdk.KEY_Escape:
+                dialog.close()
+                return True
+            spec = keymod.from_key_event(keyval, state)
+            if spec is None:        # a modifier: wait for the real key, or its release
+                lone["keyval"] = keyval if lone["keyval"] is None else -1
+                return True
+            store(spec)
+            return True
+
+        def released(_c, keyval, _keycode, _state):
+            # Ctrl, Shift, Alt or Super pressed and released alone: hold buttons can hold it.
+            if lone["keyval"] == keyval:
+                spec = keymod.modifier_combo(keyval)
+                if spec:
+                    store(spec)
+            lone["keyval"] = None
+
+        ctrl.connect("key-pressed", pressed)
+        ctrl.connect("key-released", released)
+        dialog.add_controller(ctrl)
+        dialog.present(self)
+        return False
 
     def _profile_changed(self, row, _pspec):
         if self._updating:
             return
         self.cfg["profile"] = row.keys[row.get_selected()]
-        self.app.tablet_config_changed()
+        self._buttons_changed()
 
-    def _buttons_changed(self):
+    def _set_sub(self, section, key, value):
+        """Change cfg["tablet"][section][key] and push it to the tablet."""
         if self._updating:
             return
-        buttons = []
-        for row in self.combo_buttons:
-            action = row.keys[row.get_selected()]
-            if action != "none":
-                buttons.append({"action": action})
-        self.cfg["tablet"]["toolbar"]["buttons"] = buttons
+        self.cfg["tablet"][section][key] = value
         self.app.tablet_config_changed()
-
-    def _set_toolbar(self, key, value):
-        if not self._updating:
-            self.cfg["tablet"]["toolbar"][key] = value
-            self.app.tablet_config_changed()
-
-    def _set_gesture(self, key, value):
-        if not self._updating:
-            self.cfg["tablet"]["gestures"][key] = value
-            self.app.tablet_config_changed()
-
-    def _set_palm(self, key, value):
-        if not self._updating:
-            self.cfg["tablet"]["palm"][key] = value
-            self.app.tablet_config_changed()
+        self.refresh_config()
 
     def _set_tablet(self, key, value):
         if not self._updating:
@@ -408,10 +660,11 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_connection(self):
         page = Adw.PreferencesPage()
 
-        g = Adw.PreferencesGroup(title=_("Connection"))
-        self.combo_mode = self._string_combo(
-            _("Mode"), [("usb", _("USB")), ("wifi", _("Wi-Fi"))],
-            _("USB (recommended) needs USB debugging on the tablet; Wi-Fi needs the access code"))
+        g = Adw.PreferencesGroup(
+            title=_("Connection"),
+            description=_("USB (recommended for Android) needs USB debugging on the tablet. Wi-Fi works "
+                          "with any tablet's browser, iPads included, and needs the access code."))
+        self.combo_mode = self._string_combo(_("Mode"), [("usb", _("USB")), ("wifi", _("Wi-Fi"))])
         self.combo_mode.connect("notify::selected", lambda r, _p: None if self._updating
                                 else self.app.set_mode(r.keys[r.get_selected()]))
         g.add(self.combo_mode)
@@ -472,6 +725,10 @@ class MainWindow(Adw.ApplicationWindow):
         self.sw_autostart.connect("notify::active", lambda r, _p: None if self._updating
                                   else self.app.set_autostart(r.get_active()))
         g.add(self.sw_autostart)
+        self.combo_theme = self._string_combo(
+            _("Appearance"), [("system", _("Follow the system")), ("light", _("Light")), ("dark", _("Dark"))])
+        self.combo_theme.connect("notify::selected", self._theme_changed)
+        g.add(self.combo_theme)
         self.combo_lang = self._string_combo(
             _("Language"), [(k, v or _("System default")) for k, v in LANGUAGES.items()],
             _("Applies after restarting Inkslate"))
@@ -482,6 +739,12 @@ class MainWindow(Adw.ApplicationWindow):
         g.add(self.row_weylus_path)
         page.add(g)
         return page
+
+    def _theme_changed(self, row, _pspec):
+        if not self._updating:
+            self.cfg["appearance"]["theme"] = row.keys[row.get_selected()]
+            self.cfg.save()
+            self.app.apply_theme()
 
     def _language_changed(self, row, _pspec):
         if not self._updating:
@@ -547,7 +810,8 @@ class MainWindow(Adw.ApplicationWindow):
             self.row_battery.set_visible(False)
 
         if app.weylus.running:
-            self.row_weylus.set_subtitle(_("Running"))
+            flavor = app.weylus_flavor_name()
+            self.row_weylus.set_subtitle(_("Running") + (f" · {flavor}" if flavor else ""))
         else:
             msg = app.weylus_message
             self.row_weylus.set_subtitle({
@@ -555,8 +819,16 @@ class MainWindow(Adw.ApplicationWindow):
                 "crashed": _("Keeps stopping; see the log (is another Weylus using the ports?)"),
                 "restarting": _("Restarting…"),
             }.get(msg, msg or _("Stopped")))
-        self.row_url.set_subtitle(app.page_url())
-        self.row_weylus_path.set_subtitle(app.weylus_path() or _("not found"))
+        url = app.page_url()
+        self.row_url.set_subtitle(url)
+        self.row_weylus_path.set_subtitle(app.weylus_description() or _("not found"))
+
+        wifi = self.cfg["mode"] == "wifi"
+        self.grp_qr.set_visible(wifi)
+        if wifi and url != self._qr_text:
+            self._qr_text = url
+            data = qr.to_svg(qr.encode(url), module=5).encode()
+            self.qr_picture.set_paintable(Gdk.Texture.new_from_bytes(GLib.Bytes.new(data)))
 
     def refresh_native(self):
         client = self.app.client()
@@ -573,10 +845,10 @@ class MainWindow(Adw.ApplicationWindow):
                 self.sw_quick_energy.set_active(bool(native["energysaving"]))
             if "enable_video" in self.native_rows and native.get("energysaving"):
                 self.native_rows["enable_video"].set_sensitive(False)
-            for w in (self.spin_interval, self.row_scale_video, self.combo_capture, self.row_min_pressure):
+            for w in (self.spin_fps, self.row_scale_video, self.combo_capture, self.row_min_pressure):
                 w.set_sensitive(bool(native))
-            if "frame_update_limit" in native:
-                self.spin_interval.set_value(native["frame_update_limit"])
+            if native.get("frame_rate"):
+                self.spin_fps.set_value(native["frame_rate"])
             if "scale_video" in native:
                 self.scale_video.set_value(native["scale_video"])
                 w, h = native.get("video_resolution") or (0, 0)
@@ -591,6 +863,41 @@ class MainWindow(Adw.ApplicationWindow):
                 self.combo_capture.set_selected(int(cap))
         finally:
             self._updating = False
+        self._update_previews()
+
+    def _refresh_monitors(self):
+        monitors = self.app.monitors()
+        keys = [""] + [m["connector"] for m in monitors]
+        labels = [_("All screens")]
+        for m in monitors:
+            size = f"{m['w']}×{m['h']}"
+            labels.append(f"{m['name']} ({m['connector']}, {size})" if m.get("name")
+                          else f"{m['connector']} ({size})")
+        if keys != self.monitor_keys:
+            self.monitor_keys = keys
+            self.monitor_list.splice(0, self.monitor_list.get_n_items(), labels)
+        area = self.cfg["tablet"]["area"]
+        self.combo_monitor.set_selected(keys.index(area["monitor"]) if area["monitor"] in keys else 0)
+        region = area.get("region") or FULL
+        preset = next((k for k, r in REGIONS.items()
+                       if all(abs(r[c] - region.get(c, 0)) < 1e-3 for c in "xywh")), "custom")
+        self._select_key(self.combo_region, preset)
+
+    def _update_previews(self):
+        t = self.cfg["tablet"]
+        payload = self.app.tablet_payload()
+        size = self.app.tablet_screen_size()
+        active = set()
+        if t["eraser"]:
+            active.add("eraser")
+        client = self.app.client()
+        if client and (client.state.get("native") or {}).get("enable_touch"):
+            active.add("touch")
+        preview_cfg = dict(t, toolbar=payload["toolbar"], _area_aspect=payload["area"]["aspect"])
+        self.preview.update(preview_cfg, payload["toolbar"]["buttons"], size, active)
+        self.area_view.update(self.app.monitors(), t["area"], size[0] / size[1] if size[1] else 1.6,
+                              t["screen"]["background"], t["screen"]["show_area"],
+                              payload["toolbar"]["accent"])
 
     def refresh_config(self):
         t = self.cfg["tablet"]
@@ -603,17 +910,29 @@ class MainWindow(Adw.ApplicationWindow):
             self.sw_eraser.set_active(t["eraser"])
             self.sw_quick_eraser.set_active(t["eraser"])
             self.scale_smooth.set_value(t["smoothing"])
-            self.sw_toolbar.set_active(t["toolbar"]["enabled"])
-            self._select_key(self.combo_side, t["toolbar"]["side"])
+
+            tb = t["toolbar"]
+            self.sw_toolbar.set_active(tb["enabled"])
+            self._select_key(self.combo_side, tb["side"])
+            self.scale_size.set_value(tb["size"])
+            self.scale_opacity.set_value(tb["opacity"])
+            self._select_key(self.combo_bar_theme, tb["theme"])
+            self.color_accent.set_rgba(_rgba(tb["accent"] or self.app.accent_hex()))
+            self.sw_labels.set_active(tb["labels"])
+            self.sw_fade.set_active(tb["fade"])
             self._select_key(self.combo_profile, self.cfg["profile"])
-            actions = [b.get("action", "none") for b in t["toolbar"]["buttons"]][:MAX_TOOLBAR_BUTTONS]
-            for i, row in enumerate(self.combo_buttons):
-                self._select_key(row, actions[i] if i < len(actions) else "none")
+
             self.sw_gestures.set_active(t["gestures"]["enabled"])
             self._select_key(self.combo_two, t["gestures"]["two"])
             self._select_key(self.combo_three, t["gestures"]["three"])
             self.sw_palm.set_active(t["palm"]["enabled"])
             self.spin_palm.set_value(t["palm"]["ms"])
+
+            self._refresh_monitors()
+            self.sw_keep_aspect.set_active(t["area"]["keep_aspect"])
+            self.color_bg.set_rgba(_rgba(t["screen"]["background"]))
+            self.sw_show_area.set_active(t["screen"]["show_area"])
+
             self._select_key(self.combo_mode, self.cfg["mode"])
             self.row_code.set_text(self.cfg["access_code"])
             self.row_code.set_visible(self.cfg["mode"] == "wifi")
@@ -629,9 +948,19 @@ class MainWindow(Adw.ApplicationWindow):
             self.sw_vaapi.set_active(v["try_vaapi"])
             self.sw_nvenc.set_active(v["try_nvenc"])
             self.sw_autostart.set_active(self.app.autostart_enabled())
+            self._select_key(self.combo_theme, self.cfg["appearance"]["theme"])
             self._select_key(self.combo_lang, self.cfg["language"])
         finally:
             self._updating = False
+        if len(self.button_rows) != len(t["toolbar"]["buttons"]) or self._rows_stale():
+            self._rebuild_button_rows()
+        self._update_previews()
+
+    def _rows_stale(self):
+        for row, b in zip(self.button_rows, self.cfg["tablet"]["toolbar"]["buttons"]):
+            if row.keys[row.get_selected()] != b.get("action"):
+                return True
+        return False
 
     # ================================================================== helpers
 

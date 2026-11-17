@@ -65,9 +65,14 @@ if [[ -z "$weylus" && $with_weylus == 1 ]]; then
     install -Dm755 "$tmp/weylus" "${PREFIX}/bin/weylus"
     weylus="${PREFIX}/bin/weylus"
 fi
+if [[ -z "$weylus" ]] && command -v flatpak >/dev/null \
+        && flatpak info io.github.electronstudio.WeylusCommunityEdition >/dev/null 2>&1; then
+    weylus="Weylus Community Edition (Flatpak)"
+fi
 if [[ -z "$weylus" ]]; then
-    warn "Weylus is not installed. Re-run with --with-weylus, or get it from"
-    echo "    https://github.com/H-M-H/Weylus/releases"
+    warn "Weylus is not installed. Re-run with --with-weylus, install the Community Edition with"
+    echo "    flatpak install flathub io.github.electronstudio.WeylusCommunityEdition"
+    echo "    or get it from https://github.com/H-M-H/Weylus/releases"
 else
     say "Using Weylus: $weylus"
 fi

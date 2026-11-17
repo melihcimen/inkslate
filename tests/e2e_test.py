@@ -313,6 +313,134 @@ def main():
         conn.call("Emulation.clearDeviceMetricsOverride")
         inkslate(env, "--native", "energysaving=false")
 
+        # ---- background colour of the energy-saving screen
+        inkslate(env, "--native", "energysaving=true")
+        wait_for(lambda: page.js("settings.checks.get('energysaving').checked") is True, timeout=5)
+        inkslate(env, "--set", 'tablet.screen.background="#203040"')
+        wait_for(lambda: page.js("inkslate.config().screen.background") == "#203040", timeout=5)
+        time.sleep(0.3)
+        px = page.js("""(() => { const c = document.getElementById('canvas'); const x = c.getContext('2d');
+            return x ? Array.from(x.getImageData(c.width >> 1, c.height >> 1, 1, 1).data) : null; })()""")
+        check("energy saving screen uses the chosen background", px == [32, 48, 64, 255], str(px))
+        inkslate(env, "--set", 'tablet.screen.background="#000000"')
+        inkslate(env, "--native", "energysaving=false")
+
+        # ---- frame rate in FPS works on Weylus 0.11 (which stores a frame interval)
+        inkslate(env, "--native", "frame_rate=30")
+        time.sleep(0.6)
+        ms = page.js("frame_update_scale(settings.frame_update_limit_input.valueAsNumber)")
+        check("frame_rate=30 sets a ~33 ms frame interval", ms is not None and abs(ms - 33.3) < 3, str(ms))
+
+        # ---- screen area: right half of the screens, then keep proportions
+        rect = json.loads(page.js("JSON.stringify(document.getElementById('canvas').getBoundingClientRect())"))
+
+        def expected_x(client_x):
+            a = page.js("JSON.stringify(inkslate.config().area)")
+            a = json.loads(a)
+            d, want = a["display"], a["aspect"]
+            x = (client_x - rect["x"]) / rect["width"]
+            aspect = rect["width"] / rect["height"]
+            tx, tw = 0.0, 1.0
+            if want and aspect > want:
+                tw = want / aspect
+                tx = (1 - tw) / 2
+            u = min(1, max(0, (x - tx) / tw))
+            return (d["x"] + u * d["w"]) * 65535
+
+        def pen_x_at(client_x):
+            page.pen("move", 50 if client_x > 200 else W - 50, 600, buttons=0)
+            time.sleep(0.15)
+            stylus.mark()
+            page.pen("down", client_x, 400, 0.3)
+            time.sleep(0.3)
+            xs = events(stylus.text(), "ABS_X")
+            page.pen("up", client_x, 400)
+            time.sleep(0.2)
+            return xs[0] if xs else None
+
+        time.sleep(0.8)
+        got = pen_x_at(W * 0.5)
+        check("full area: middle of the tablet -> middle of the screens",
+              got is not None and abs(got - expected_x(W * 0.5)) < 400, f"{got} vs {expected_x(W * 0.5):.0f}")
+        inkslate(env, "--set", 'tablet.area.region={"x": 0.5, "y": 0, "w": 0.5, "h": 1}')
+        wait_for(lambda: page.js("inkslate.config().area.display.w") < 0.9, timeout=5)
+        got = pen_x_at(W * 0.5)
+        exp = expected_x(W * 0.5)
+        check("right-half area: middle of the tablet -> 3/4 across", got is not None and abs(got - exp) < 400
+              and exp > 65535 * 0.6, f"{got} vs {exp:.0f}")
+        inkslate(env, "--set", "tablet.area.keep_aspect=true")
+        wait_for(lambda: page.js("inkslate.config().area.aspect") > 0, timeout=5)
+        got = pen_x_at(W * 0.12)     # right of the toolbar, inside the unused band
+        exp = expected_x(W * 0.12)
+        check("keep proportions: the unused side band clamps to the area's edge",
+              got is not None and abs(got - exp) < 400, f"{got} vs {exp:.0f}")
+        inkslate(env, "--set", 'tablet.area.region={"x": 0, "y": 0, "w": 1, "h": 1}')
+        inkslate(env, "--set", "tablet.area.keep_aspect=false")
+
+        # ---- custom toolbar: held Space, recorded shortcuts, right-click strokes, top bar
+        inkslate(env, "--set", "profile=generic")
+        inkslate(env, "--set", 'tablet.toolbar.buttons=[{"action": "pan"}, '
+                 '{"action": "custom", "keys": {"keyval": "b", "ctrl": true}}, '
+                 '{"action": "custom", "keys": {"keyval": "bracketleft"}}, {"action": "right_click"}]')
+        inkslate(env, "--set", 'tablet.toolbar.side="top"')
+        wait_for(lambda: page.js("document.querySelectorAll('#inkslate-bar button').length") == 4, timeout=5)
+        bar = json.loads(page.js("JSON.stringify(document.getElementById('inkslate-bar').getBoundingClientRect())"))
+        check("toolbar at the top, horizontal", bar["y"] < 20 and bar["width"] > bar["height"], str(bar))
+        rects = json.loads(page.js("""JSON.stringify(Array.from(document.querySelectorAll('#inkslate-bar button'))
+            .map(b => { const r = b.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }))"""))
+        time.sleep(0.8)
+
+        def press(x, y, kind):
+            conn.call("Input.dispatchMouseEvent", type=kind, x=x, y=y, button="left",
+                      buttons=1 if kind == "mousePressed" else 0, clickCount=1, pointerType="mouse")
+
+        keyboard.mark()
+        press(*rects[0], "mousePressed")
+        time.sleep(0.6)
+        t = keyboard.text()
+        check("pan button holds Space down", 1 in events(t, "KEY_SPACE") and 0 not in events(t, "KEY_SPACE"), t[-200:])
+        press(*rects[0], "mouseReleased")
+        time.sleep(0.3)
+        check("Space is released with the button", 0 in events(keyboard.text(), "KEY_SPACE"))
+
+        keyboard.mark()
+        page.mouse_click(*rects[1])
+        time.sleep(0.4)
+        t = keyboard.text()
+        check("custom button sends Ctrl+B", 1 in events(t, "KEY_LEFTCTRL") and 1 in events(t, "KEY_B"))
+
+        sent = json.loads(page.js("JSON.stringify(inkslate.config().toolbar.buttons[2].keys)"))
+        keyboard.mark()
+        page.mouse_click(*rects[2])
+        time.sleep(0.4)
+        t = keyboard.text()
+        from inkslate.keys import CODE_TO_EVDEV
+        code_ok = re.search(rf"code {CODE_TO_EVDEV.get(sent.get('code'), -1)} \(\w+\), value 1", t) is not None
+        altgr_ok = (1 in events(t, "KEY_RIGHTALT")) == bool(sent.get("altgr"))
+        check("'[' is sent for this keyboard layout", code_ok and altgr_ok, f"{sent} / {t[-160:]}")
+
+        page.mouse_click(*rects[3])
+        time.sleep(0.3)
+        check("right-click button arms the mode", page.js("inkslate.state.penMode") == "right")
+        mouse.mark()
+        stylus.mark()
+        page.stroke(0.4, x=700, y=450)
+        time.sleep(0.5)
+        m = mouse.text()
+        check("next pen stroke is a right-button drag", 1 in events(m, "BTN_RIGHT") and 0 in events(m, "BTN_RIGHT")
+              and 1 not in events(stylus.text(), "BTN_TOUCH"), m[-160:])
+        check("right-click mode ends after one stroke", page.js("inkslate.state.penMode") is None)
+        stylus.mark()
+        page.stroke(0.4, x=700, y=450)
+        time.sleep(0.4)
+        check("the stroke after that draws again", 1 in events(stylus.text(), "BTN_TOUCH"))
+
+        inkslate(env, "--set", "tablet.toolbar.labels=true")
+        wait_for(lambda: page.js("document.querySelectorAll('#inkslate-bar .lbl').length") == 4, timeout=5)
+        check("labels shown on the buttons", page.js("document.querySelectorAll('#inkslate-bar .lbl').length") == 4)
+        lbls = page.js("Array.from(document.querySelectorAll('#inkslate-bar .lbl')).map(l => l.textContent).join('|')")
+        check("toolbar labels are short", lbls.split("|")[0] in ("Pan", "Kaydır") and "Space" not in lbls, lbls)
+
         # ---- control channel refuses other origins
         try:
             import socket

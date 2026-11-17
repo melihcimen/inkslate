@@ -20,7 +20,8 @@ DEFAULTS = {
     "language": "",                # "" = system language, or "en" / "tr"
     "mode": "usb",                 # "usb": localhost + adb reverse, "wifi": LAN with access code
     "access_code": "",
-    "weylus_path": "",             # empty: look in PATH and ~/.local/bin
+    "weylus_path": "",             # a path, "flatpak" (Community Edition), or empty: PATH,
+                                   # ~/.local/bin, then the Flatpak
     "web_port": 1701,
     "websocket_port": 9001,
     "control_port": 9002,
@@ -35,8 +36,11 @@ DEFAULTS = {
         "dim_on_energysaving": False,
         "dim_level": 10,           # percent of the tablet's brightness range
     },
-    "profile": "rnote",
-    # Pushed to the tablet page as-is (see DEFAULTS in web/inkslate.js).
+    "profile": "generic",          # shortcut preset, see profiles.py
+    "appearance": {"theme": "system"},   # this window: "system", "light" or "dark"
+    "tablet_screen": [1280, 800],  # last tablet page size seen (CSS px), for the previews
+    # Sent to the tablet page (see DEFAULTS in web/inkslate.js) after payload.build() resolves
+    # shortcuts for the keyboard layout and the screen area for the monitors.
     "tablet": {
         "curve": {"in_min": 0.0, "in_max": 1.0, "gamma": 1.0},
         "smoothing": 0.0,
@@ -45,8 +49,23 @@ DEFAULTS = {
         "gestures": {"enabled": True, "two": "undo", "three": "redo"},
         "toolbar": {
             "enabled": True,
-            "side": "left",
+            "side": "left",        # left, right, top, bottom
+            "size": 54,            # button size in CSS pixels
+            "opacity": 0.6,        # while not touched
+            "theme": "dark",       # dark or light
+            "accent": "",          # "" follows the desktop's accent color
+            "labels": False,
+            "fade": True,          # almost hide the bar while the pen is drawing
             "buttons": [{"action": "undo"}, {"action": "redo"}, {"action": "eraser"}],
+        },
+        "screen": {
+            "background": "#000000",   # energy-saving screen
+            "show_area": True,         # mark the unused part when the area keeps the aspect ratio
+        },
+        "area": {
+            "monitor": "",             # connector name, "" = all screens
+            "region": {"x": 0.0, "y": 0.0, "w": 1.0, "h": 1.0},   # part of that monitor
+            "keep_aspect": False,      # use only the part of the tablet with the same shape
         },
         "wake_lock": True,
         "fullscreen_on_tap": False,
@@ -94,9 +113,3 @@ class Config:
 
     def __setitem__(self, key, value):
         self.data[key] = value
-
-    def tablet_config(self):
-        """The config object sent to the tablet page, with the profile's key bindings."""
-        t = copy.deepcopy(self.data["tablet"])
-        t["keys"] = copy.deepcopy(PROFILES[self.data["profile"]]["keys"])
-        return t

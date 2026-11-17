@@ -2,7 +2,7 @@
 """Renders every page of the main window to PNG (for the README and for reviewing the UI).
 
 Runs a separate instance (own app id, throwaway config, spare ports, USB off).
-Usage: python3 tests/screenshots.py OUTDIR [--dark] [--width 720]
+Usage: python3 tests/screenshots.py OUTDIR [--dark] [--width 720] [--wifi] [--set '{"tablet": ...}']
 """
 
 import argparse
@@ -20,12 +20,18 @@ ap.add_argument("outdir")
 ap.add_argument("--dark", action="store_true")
 ap.add_argument("--width", type=int, default=720)
 ap.add_argument("--height", type=int, default=820)
+ap.add_argument("--wifi", action="store_true", help="Wi-Fi mode (shows the QR code)")
+ap.add_argument("--set", default="{}", help="JSON merged into the config")
+ap.add_argument("--pages", default="status,tablet,pen,area,toolbar,connection")
+ap.add_argument("--bottom", action="store_true", help="scroll each page to the end")
 args = ap.parse_args()
 
 tmp = Path(tempfile.mkdtemp(prefix="inkslate-shots-"))
 (tmp / "config" / "inkslate").mkdir(parents=True)
-(tmp / "config" / "inkslate" / "config.json").write_text(json.dumps({
-    "web_port": 1821, "websocket_port": 9121, "control_port": 9122, "usb": {"enabled": False}}))
+conf = {"web_port": 1821, "websocket_port": 9121, "control_port": 9122, "usb": {"enabled": False},
+        "access_code": "demo-code", "mode": "wifi" if args.wifi else "usb"}
+conf.update(json.loads(args.set))
+(tmp / "config" / "inkslate" / "config.json").write_text(json.dumps(conf))
 os.environ.update(XDG_CONFIG_HOME=str(tmp / "config"), XDG_STATE_HOME=str(tmp / "state"),
                   XDG_CACHE_HOME=str(tmp / "cache"), INKSLATE_APP_ID="io.github.melihcimen.Inkslate.Shots")
 
@@ -36,9 +42,14 @@ gi.require_version("Adw", "1")
 gi.require_version("Graphene", "1.0")
 from gi.repository import Adw, GLib, Graphene, Gtk  # noqa: E402
 
+import inkslate.app  # noqa: E402
 from inkslate.app import InkslateApp  # noqa: E402
 
-PAGES = ["status", "tablet", "pen", "shortcuts", "connection"]
+# Screenshots end up in the README: don't show this machine's address or home directory.
+inkslate.app.lan_ip = lambda: "192.168.1.23"
+InkslateApp.weylus_description = lambda self: "/usr/bin/weylus"
+
+PAGES = args.pages.split(",")
 out = Path(args.outdir)
 out.mkdir(parents=True, exist_ok=True)
 
@@ -57,10 +68,17 @@ class ShotApp(InkslateApp):
             self.quit()
             return False
         self.window.stack.set_visible_child_name(PAGES[i])
+        if args.bottom:
+            page = self.window.stack.get_visible_child()
+            child = page.get_first_child()
+            while child is not None and not isinstance(child, Gtk.ScrolledWindow):
+                child = child.get_first_child()
+            if child is not None:
+                GLib.timeout_add(300, lambda adj=child.get_vadjustment(): adj.set_value(adj.get_upper()) or False)
         if PAGES[i] == "pen":
             self.window.curve_view.peak_raw = 0.84
             self.window.push_pressure({"raw": 0.53, "out": 0.53, "contact": True})
-        GLib.timeout_add(600, self._snap, i)
+        GLib.timeout_add(900, self._snap, i)
         return False
 
     def _snap(self, i):

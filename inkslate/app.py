@@ -12,14 +12,16 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from . import APP_ID, __version__  # noqa: E402
+from . import keys as keymod  # noqa: E402
+from . import payload  # noqa: E402
 from .config import STATE_DIR, Config  # noqa: E402
 from .control import ControlServer  # noqa: E402
 from .i18n import _  # noqa: E402
 from .usb import UsbManager  # noqa: E402
-from .weylus import WeylusProcess, find_weylus  # noqa: E402
+from .weylus import WeylusProcess, describe, find_weylus  # noqa: E402
 
 AUTOSTART_FILE = Path(GLib.get_user_config_dir()) / "autostart" / f"{APP_ID}.desktop"
 log = logging.getLogger("inkslate")
@@ -62,6 +64,7 @@ class InkslateApp(Adw.Application):
         self.weylus_message = ""
         self._monitor = False
         self._hid_once = False
+        self._resend_pending = False
 
     # ------------------------------------------------------------------ lifecycle
 
@@ -86,6 +89,18 @@ class InkslateApp(Adw.Application):
             self.add_action(action)
         self.set_accels_for_action("app.quit", ["<Control>q"])
         self.set_accels_for_action("window.close", ["<Control>w"])
+
+        self.apply_theme()
+        # Shortcuts depend on the keyboard layout and the area on the monitors: resend when they change.
+        display = Gdk.Display.get_default()
+        if display is not None:
+            display.get_monitors().connect("items-changed", lambda *_a: self._schedule_resend())
+            seat = display.get_default_seat()
+            keyboard = seat.get_keyboard() if seat else None
+            if keyboard is not None:
+                keyboard.connect("notify::layout-names", lambda *_a: self._schedule_resend())
+                keyboard.connect("changed", lambda *_a: self._schedule_resend())
+        Adw.StyleManager.get_default().connect("notify::accent-color", lambda *_a: self._schedule_resend())
 
         # The app keeps running (and serving the tablet) with the window closed.
         self.hold()
@@ -145,7 +160,7 @@ class InkslateApp(Adw.Application):
             "version": __version__,
             "mode": self.config["mode"],
             "weylus": {"running": self.weylus.running, "message": self.weylus_message,
-                       "path": self.weylus_path()},
+                       "program": self.weylus_description(), "flavor": self.weylus.flavor},
             "usb": self.usb.status,
             "pages": [{"remote": c.remote, "version": c.hello.get("version"),
                        "fullscreen": c.state.get("fullscreen"), "visible": c.state.get("visible"),
@@ -178,6 +193,8 @@ class InkslateApp(Adw.Application):
         self.config.save()
         if keys[0] in ("tablet", "profile"):
             self.tablet_config_changed()
+        elif keys[0] == "appearance":
+            self.apply_theme()
         elif keys[0] == "usb":
             self.usb_config_changed()
         elif keys[0] in ("video", "access_code", "weylus_path"):
@@ -220,6 +237,68 @@ class InkslateApp(Adw.Application):
     def weylus_path(self):
         return find_weylus(self.config["weylus_path"])
 
+    def weylus_description(self):
+        return describe(self.weylus.cmd if self.weylus.cmd else self.weylus_path())
+
+    def weylus_flavor_name(self):
+        return {"0.11": "Weylus 0.11", "ce": "Weylus Community Edition"}.get(self.weylus.flavor, "")
+
+    def monitors(self):
+        """The PC's monitors in desktop coordinates (logical pixels), left to right."""
+        display = Gdk.Display.get_default()
+        out = []
+        if display is None:
+            return out
+        model = display.get_monitors()
+        for i in range(model.get_n_items()):
+            m = model.get_item(i)
+            g = m.get_geometry()
+            name = " ".join(x for x in (m.get_manufacturer(), m.get_model()) if x and x != "unknown")
+            out.append({"connector": m.get_connector() or f"monitor{i}", "name": name,
+                        "x": g.x, "y": g.y, "w": g.width, "h": g.height})
+        out.sort(key=lambda m: (m["x"], m["y"]))
+        return out
+
+    def accent_hex(self):
+        sm = Adw.StyleManager.get_default()
+        try:
+            c = sm.get_accent_color_rgba()      # libadwaita 1.6+
+            return "#{:02x}{:02x}{:02x}".format(*(round(v * 255) for v in (c.red, c.green, c.blue)))
+        except AttributeError:
+            return "#3584e4"
+
+    def apply_theme(self):
+        scheme = {"light": Adw.ColorScheme.FORCE_LIGHT, "dark": Adw.ColorScheme.FORCE_DARK}.get(
+            self.config["appearance"]["theme"], Adw.ColorScheme.DEFAULT)
+        Adw.StyleManager.get_default().set_color_scheme(scheme)
+
+    def tablet_payload(self):
+        return payload.build(self.config, keymod.resolve, self.monitors(), self.accent_hex())
+
+    def tablet_screen_size(self):
+        """The tablet page's size in CSS pixels, from the connected page or the last one seen."""
+        client = self.client()
+        scr = (client.state.get("screen") if client else None) or {}
+        if scr.get("width") and scr.get("height"):
+            size = (scr["width"], scr["height"])
+            if self.config["tablet_screen"] != list(size):
+                self.config["tablet_screen"] = list(size)
+                self.config.save()
+            return size
+        return tuple(self.config["tablet_screen"])
+
+    def _schedule_resend(self):
+        if not self._resend_pending:
+            self._resend_pending = True
+            GLib.timeout_add(300, self._resend)
+
+    def _resend(self):
+        self._resend_pending = False
+        self.control.send({"type": "config", "config": self.tablet_payload()})
+        if self.window:
+            self.window.refresh_config()
+        return False
+
     def page_url(self):
         port = self.config["web_port"]
         if self.config["mode"] == "usb":
@@ -234,7 +313,7 @@ class InkslateApp(Adw.Application):
 
     def tablet_config_changed(self):
         self.config.save()
-        self.control.send({"type": "config", "config": self.config.tablet_config()})
+        self.control.send({"type": "config", "config": self.tablet_payload()})
 
     def usb_config_changed(self):
         self.config.save()
@@ -316,7 +395,7 @@ class InkslateApp(Adw.Application):
 
     def _on_hello(self, client):
         log.info("tablet page connected from %s (inkslate.js %s)", client.remote, client.hello.get("version"))
-        self.control.send({"type": "config", "config": self.config.tablet_config()}, client)
+        self.control.send({"type": "config", "config": self.tablet_payload()}, client)
         if self._monitor:
             self.control.send({"type": "monitor", "on": True}, client)
         client.fullscreen_requested = False
@@ -381,9 +460,12 @@ class InkslateApp(Adw.Application):
             license_type=Gtk.License.AGPL_3_0,
             website="https://github.com/melihcimen/inkslate",
             issue_url="https://github.com/melihcimen/inkslate/issues",
-            comments=_("Use an Android tablet as a graphics tablet on Linux. Built on Weylus by H-M-H."),
+            comments=_("Use an Android tablet or iPad as a pen tablet for your Linux PC, "
+                       "with any drawing app. Built on Weylus by H-M-H."),
         )
-        about.add_credit_section(_("Built on"), ["Weylus https://github.com/H-M-H/Weylus"])
+        about.add_credit_section(_("Built on"), [
+            "Weylus https://github.com/H-M-H/Weylus",
+            "Weylus Community Edition https://github.com/electronstudio/WeylusCommunityEdition"])
         about.present(self.window)
 
 

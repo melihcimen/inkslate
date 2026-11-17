@@ -58,8 +58,8 @@ msgstr "Tam ekrana geçilemedi: {reason}"
 msgid "Inkslate contributors"
 msgstr "Inkslate katkıcıları"
 
-msgid "Use an Android tablet as a graphics tablet on Linux. Built on Weylus by H-M-H."
-msgstr "Linux'ta Android tableti çizim tableti olarak kullan. H-M-H'nin Weylus'u üzerine kurulu."
+msgid "Use an Android tablet or iPad as a pen tablet for your Linux PC, with any drawing app. Built on Weylus by H-M-H."
+msgstr "Android tableti ya da iPad'i Linux bilgisayarında her çizim uygulamasıyla kalem tableti olarak kullan. H-M-H'nin Weylus'u üzerine kurulu."
 
 msgid "Built on"
 msgstr "Temel aldığı"
@@ -73,11 +73,38 @@ msgstr "Geri al"
 msgid "Redo"
 msgstr "Yinele"
 
+msgid "Save"
+msgstr "Kaydet"
+
+msgid "Copy"
+msgstr "Kopyala"
+
+msgid "Paste"
+msgstr "Yapıştır"
+
+msgid "Zoom in"
+msgstr "Yakınlaştır"
+
+msgid "Zoom out"
+msgstr "Uzaklaştır"
+
+msgid "Bigger brush"
+msgstr "Fırçayı büyüt"
+
+msgid "Smaller brush"
+msgstr "Fırçayı küçült"
+
+msgid "Pan (hold Space)"
+msgstr "Kaydır (Space basılı)"
+
 msgid "Eraser"
 msgstr "Silgi"
 
-msgid "Save"
-msgstr "Kaydet"
+msgid "Right click"
+msgstr "Sağ tık"
+
+msgid "Middle-button drag"
+msgstr "Orta tuşla sürükle"
 
 msgid "Toggle finger input"
 msgstr "Parmak girdisini aç/kapa"
@@ -85,8 +112,50 @@ msgstr "Parmak girdisini aç/kapa"
 msgid "Fullscreen"
 msgstr "Tam ekran"
 
+msgid "Custom shortcut"
+msgstr "Özel kısayol"
+
+msgid "Custom key, held"
+msgstr "Özel tuş, basılı"
+
 msgid "Nothing"
 msgstr "Hiçbiri"
+
+msgid "Zoom +"
+msgstr "Yakın +"
+
+msgid "Zoom −"
+msgstr "Uzak −"
+
+msgid "Brush +"
+msgstr "Fırça +"
+
+msgid "Brush −"
+msgstr "Fırça −"
+
+msgid "Pan"
+msgstr "Kaydır"
+
+msgid "Middle"
+msgstr "Orta"
+
+msgid "Touch"
+msgstr "Dokunma"
+
+msgid "Tap: on/off · hold: only while held"
+msgstr "Dokun: aç/kapat · basılı tut: sadece basılıyken"
+
+msgid "Tap: next pen tap is a right click · hold: while held"
+msgstr "Dokun: sonraki kalem dokunuşu sağ tık · basılı tut: basılıyken"
+
+msgid "Tap: next pen stroke drags with the middle button · hold: while held"
+msgstr "Dokun: sonraki kalem çizgisi orta tuşla sürükler · basılı tut: basılıyken"
+
+msgid "Hold the button and drag with the pen"
+msgstr "Düğmeyi basılı tutup kalemle sürükle"
+
+msgid "The key stays down while the button is held"
+msgstr "Düğme basılıyken tuş da basılı kalır"
 
 msgid "About Inkslate"
 msgstr "Inkslate Hakkında"
@@ -106,8 +175,11 @@ msgstr "Tablet"
 msgid "Pen"
 msgstr "Kalem"
 
-msgid "Shortcuts"
-msgstr "Kısayollar"
+msgid "Area"
+msgstr "Alan"
+
+msgid "Buttons"
+msgstr "Düğmeler"
 
 msgid "Connection"
 msgstr "Bağlantı"
@@ -139,8 +211,11 @@ msgstr "Weylus günlüğünü aç"
 msgid "Address for the tablet"
 msgstr "Tablet için adres"
 
-msgid "Copy"
-msgstr "Kopyala"
+msgid "Connect over Wi-Fi"
+msgstr "Wi-Fi ile bağlan"
+
+msgid "Scan with the tablet's camera. The code includes the access code."
+msgstr "Tabletin kamerasıyla tara. Kodun içinde erişim kodu da var."
 
 msgid "Quick settings"
 msgstr "Hızlı ayarlar"
@@ -187,6 +262,30 @@ msgstr "En düşük basınç"
 msgid "Weylus' own floor, applied before the curve"
 msgstr "Weylus'un kendi alt sınırı, eğriden önce uygulanır"
 
+msgid "Finger gestures"
+msgstr "Parmak hareketleri"
+
+msgid "Work while finger input is off, so your hand can't draw."
+msgstr "Parmak girdisi kapalıyken çalışır, böylece elin çizim yapamaz."
+
+msgid "Gestures"
+msgstr "Hareketler"
+
+msgid "Two-finger tap"
+msgstr "İki parmakla dokunma"
+
+msgid "Three-finger tap"
+msgstr "Üç parmakla dokunma"
+
+msgid "Palm rejection"
+msgstr "Avuç içi reddi"
+
+msgid "When finger input is on, a palm resting while the pen is close won't draw or click"
+msgstr "Parmak girdisi açıkken, kalem yakındayken ekrana değen avuç içi çizmez ve tıklamaz"
+
+msgid "Pen grace period (ms)"
+msgstr "Kalemden sonraki bekleme süresi (ms)"
+
 msgid "Screen"
 msgstr "Ekran"
 
@@ -208,11 +307,8 @@ msgstr "Düşük gecikme"
 msgid "Skip ahead instead of buffering the video"
 msgstr "Görüntüyü arabelleğe almak yerine ileri atla"
 
-msgid "Frame interval (ms)"
-msgstr "Kareler arası süre (ms)"
-
-msgid "16 ms ≈ 60 FPS, 33 ms ≈ 30 FPS"
-msgstr "16 ms ≈ 60 FPS, 33 ms ≈ 30 FPS"
+msgid "Maximum frame rate (FPS)"
+msgstr "En yüksek kare hızı (FPS)"
 
 msgid "Maximum video resolution"
 msgstr "En yüksek görüntü çözünürlüğü"
@@ -274,16 +370,64 @@ msgstr "Kalem: {raw:.2f} → giden: {out:.2f}"
 msgid "eraser"
 msgstr "silgi"
 
+msgid "Screen area"
+msgstr "Ekran alanı"
+
+msgid "The part of the PC screen the tablet controls. Drag across the screens below to draw your own area."
+msgstr "Tabletin kontrol ettiği PC ekranı bölümü. Kendi alanını çizmek için aşağıdaki ekranların üzerinde sürükle."
+
+msgid "Whole screen"
+msgstr "Tüm ekran"
+
+msgid "Left half"
+msgstr "Sol yarı"
+
+msgid "Right half"
+msgstr "Sağ yarı"
+
+msgid "Top half"
+msgstr "Üst yarı"
+
+msgid "Bottom half"
+msgstr "Alt yarı"
+
+msgid "Custom (drawn above)"
+msgstr "Özel (yukarıda çizilen)"
+
+msgid "Keep proportions"
+msgstr "Oranı koru"
+
+msgid "Use only the part of the tablet with the same shape as the area, so circles stay round"
+msgstr "Tabletin sadece alanla aynı biçimdeki kısmını kullan, daireler daire kalsın"
+
+msgid "Tablet screen"
+msgstr "Tablet ekranı"
+
+msgid "Shown while energy saving is on."
+msgstr "Güç tasarrufu açıkken görünür."
+
+msgid "Background"
+msgstr "Arka plan"
+
+msgid "Mark the unused part"
+msgstr "Kullanılmayan kısmı göster"
+
+msgid "When proportions are kept, the rest of the tablet is shaded and does nothing"
+msgstr "Oran korunurken tabletin geri kalanı gölgeli olur ve bir şey yapmaz"
+
 msgid "Tablet toolbar"
 msgstr "Tablet kısayol çubuğu"
 
-msgid "Buttons on the edge of the tablet screen. Tap the eraser to toggle it, hold it to erase only while holding."
-msgstr "Tablet ekranının kenarındaki düğmeler. Silgiye dokununca açılıp kapanır, basılı tutunca yalnızca tuttuğun sürece siler."
+msgid "Buttons on the edge of the tablet screen. This is how they will look."
+msgstr "Tablet ekranının kenarındaki düğmeler. Böyle görünecekler."
+
+msgid "Look"
+msgstr "Görünüm"
 
 msgid "Show the toolbar"
 msgstr "Çubuğu göster"
 
-msgid "Side"
+msgid "Position"
 msgstr "Konum"
 
 msgid "Left"
@@ -292,41 +436,92 @@ msgstr "Sol"
 msgid "Right"
 msgstr "Sağ"
 
-msgid "App profile"
-msgstr "Uygulama profili"
+msgid "Top"
+msgstr "Üst"
 
-msgid "Which key combos undo, redo and save send"
-msgstr "Geri al, yinele ve kaydet hangi tuş kombinasyonlarını göndersin"
+msgid "Bottom"
+msgstr "Alt"
+
+msgid "Button size"
+msgstr "Düğme boyutu"
+
+msgid "In the tablet's pixels"
+msgstr "Tabletin pikseliyle"
+
+msgid "Opacity"
+msgstr "Opaklık"
+
+msgid "While you're not touching it"
+msgstr "Dokunmadığın sürece"
+
+msgid "Style"
+msgstr "Stil"
+
+msgid "Dark"
+msgstr "Koyu"
+
+msgid "Light"
+msgstr "Açık"
+
+msgid "Highlight colour"
+msgstr "Vurgu rengi"
+
+msgid "For buttons that are on, like the eraser"
+msgstr "Açık olan düğmeler için, silgi gibi"
+
+msgid "Use the desktop's accent colour"
+msgstr "Masaüstünün vurgu rengini kullan"
+
+msgid "Show labels"
+msgstr "Etiketleri göster"
+
+msgid "Fade while drawing"
+msgstr "Çizerken soluklaş"
+
+msgid "Almost hidden while the pen is on the screen"
+msgstr "Kalem ekrandayken neredeyse gizlenir"
+
+msgid "Shortcuts are sent for your keyboard layout. Pick an app preset, or set your own shortcut on any button."
+msgstr "Kısayollar klavye düzenine göre gönderilir. Bir uygulama hazır ayarı seç ya da herhangi bir düğmeye kendi kısayolunu ata."
+
+msgid "Add a button"
+msgstr "Düğme ekle"
+
+msgid "App preset"
+msgstr "Uygulama hazır ayarı"
+
+msgid "Which shortcuts undo, redo, zoom and the others send"
+msgstr "Geri al, yinele, yakınlaştır ve diğerlerinin hangi kısayolu göndereceği"
 
 msgid "Button {n}"
 msgstr "Düğme {n}"
 
-msgid "Finger gestures"
-msgstr "Parmak hareketleri"
+msgid "Set shortcut…"
+msgstr "Kısayol ata…"
 
-msgid "Work while finger input is off, so your hand can't draw."
-msgstr "Parmak girdisi kapalıyken çalışır, böylece elin çizim yapamaz."
+msgid "Record a shortcut"
+msgstr "Kısayol kaydet"
 
-msgid "Gestures"
-msgstr "Hareketler"
+msgid "Move up"
+msgstr "Yukarı taşı"
 
-msgid "Two-finger tap"
-msgstr "İki parmakla dokunma"
+msgid "Move down"
+msgstr "Aşağı taşı"
 
-msgid "Three-finger tap"
-msgstr "Üç parmakla dokunma"
+msgid "Remove"
+msgstr "Kaldır"
 
-msgid "Palm rejection"
-msgstr "Avuç içi reddi"
+msgid "Press the shortcut"
+msgstr "Kısayola bas"
 
-msgid "Ignore touches near the pen"
-msgstr "Kaleme yakın dokunmaları yok say"
+msgid "Press the key combination this button should send, for example Ctrl+B. For a button that holds a key, a single Ctrl, Shift or Alt also works. Escape cancels."
+msgstr "Bu düğmenin göndereceği tuş birleşimine bas, örneğin Ctrl+B. Tuşu basılı tutan düğmelerde tek başına Ctrl, Shift ya da Alt da olur. Escape iptal eder."
 
-msgid "When finger input is on, a palm resting while the pen is close won't draw or click"
-msgstr "Parmak girdisi açıkken, kalem yakındayken ekrana değen avuç içi çizmez ve tıklamaz"
+msgid "Cancel"
+msgstr "İptal"
 
-msgid "Pen grace period (ms)"
-msgstr "Kalemden sonraki bekleme süresi (ms)"
+msgid "USB (recommended for Android) needs USB debugging on the tablet. Wi-Fi works with any tablet's browser, iPads included, and needs the access code."
+msgstr "USB (Android için önerilen) tablette USB hata ayıklamayı gerektirir. Wi-Fi iPad dahil her tabletin tarayıcısıyla çalışır ve erişim kodu ister."
 
 msgid "Mode"
 msgstr "Mod"
@@ -336,9 +531,6 @@ msgstr "USB"
 
 msgid "Wi-Fi"
 msgstr "Wi-Fi"
-
-msgid "USB (recommended) needs USB debugging on the tablet; Wi-Fi needs the access code"
-msgstr "USB (önerilen) tablette USB hata ayıklama ister; Wi-Fi erişim kodu ister"
 
 msgid "Access code (Wi-Fi)"
 msgstr "Erişim kodu (Wi-Fi)"
@@ -405,6 +597,12 @@ msgstr "Oturum açılınca başlat"
 
 msgid "Runs in the background without opening this window"
 msgstr "Bu pencereyi açmadan arka planda çalışır"
+
+msgid "Appearance"
+msgstr "Görünüm teması"
+
+msgid "Follow the system"
+msgstr "Sistemi izle"
 
 msgid "Language"
 msgstr "Dil"
@@ -477,6 +675,9 @@ msgstr "bulunamadı"
 
 msgid "At most {w}×{h}"
 msgstr "En fazla {w}×{h}"
+
+msgid "All screens"
+msgstr "Tüm ekranlar"
 
 msgid "Copied"
 msgstr "Kopyalandı"
