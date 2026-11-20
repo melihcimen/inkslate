@@ -1,5 +1,10 @@
 # Inkslate
 
+[![Latest release](https://img.shields.io/github/v/release/melihcimen/inkslate)](https://github.com/melihcimen/inkslate/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/melihcimen/inkslate/total)](https://github.com/melihcimen/inkslate/releases)
+[![Stars](https://img.shields.io/github/stars/melihcimen/inkslate?style=flat)](https://github.com/melihcimen/inkslate/stargazers)
+[![License](https://img.shields.io/github/license/melihcimen/inkslate)](LICENSE)
+
 **A friendlier front end for Weylus: use an Android tablet or an iPad as a pen tablet for your
 Linux PC, with any drawing app.**
 
